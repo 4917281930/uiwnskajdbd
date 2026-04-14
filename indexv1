@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Binance Auto Post Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --bg2: #111418;
+    --bg3: #181d23;
+    --bg4: #1e252e;
+    --border: #2a3340;
+    --border2: #3a4755;
+    --text: #e8edf2;
+    --text2: #8a9ab0;
+    --text3: #4a5a6e;
+    --accent: #f0b90b;
+    --accent2: #d4a00a;
+    --green: #0ecb81;
+    --red: #f6465d;
+    --blue: #1e88e5;
+    --purple: #7b61ff;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* HEADER */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+  }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    background: var(--bg3);
+    cursor: default;
+    transition: all 0.3s;
+  }
+  .status-pill.running {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(14,203,129,0.08);
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.running .status-dot { animation: pulse 1.2s ease-in-out infinite; }
+
+  /* LAYOUT */
+  .container { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 56px); }
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .main { overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title span { color: var(--accent); }
+
+  /* FORM INPUTS */
+  label { font-size: 11px; color: var(--text2); font-weight: 500; letter-spacing: 0.04em; display: block; margin-bottom: 4px; margin-top: 10px; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--bg3); }
+  textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+  .input-hint { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+
+  /* TOGGLE */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .toggle-label { font-size: 12px; color: var(--text2); }
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    transition: all 0.25s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    background: var(--text2);
+    border-radius: 50%;
+    transition: all 0.25s;
+  }
+  .toggle input:checked ~ .toggle-thumb { left: 19px; background: var(--bg); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg4); border-color: var(--text3); }
+  .btn.accent { background: var(--accent); border-color: var(--accent2); color: #000; font-weight: 600; }
+  .btn.accent:hover { background: var(--accent2); }
+  .btn.red { background: rgba(246,70,93,0.1); border-color: var(--red); color: var(--red); }
+  .btn.red:hover { background: rgba(246,70,93,0.18); }
+  .btn.green { background: rgba(14,203,129,0.1); border-color: var(--green); color: var(--green); }
+  .btn.green:hover { background: rgba(14,203,129,0.18); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  /* METRICS ROW */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+  .metric-label { font-size: 10px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .metric-val { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .metric-val.green { color: var(--green); }
+  .metric-val.red { color: var(--red); }
+  .metric-val.yellow { color: var(--accent); }
+  .metric-sub { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+  /* MARKET TABLE */
+  .market-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+  .market-table th {
+    text-align: left;
+    color: var(--text3);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .market-table td { padding: 7px 8px; border-bottom: 1px solid var(--bg3); }
+  .market-table tr:last-child td { border: none; }
+  .market-table tr:hover td { background: var(--bg3); }
+  .coin-name { font-weight: 600; color: var(--text); }
+  .coin-tag { font-size: 10px; color: var(--text3); }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .badge.spot { background: rgba(30,136,229,0.15); color: #64b5f6; border: 1px solid rgba(30,136,229,0.3); }
+  .badge.futures { background: rgba(123,97,255,0.15); color: #b39ddb; border: 1px solid rgba(123,97,255,0.3); }
+  .badge.off-chain { background: rgba(240,185,11,0.1); color: var(--accent); border: 1px solid rgba(240,185,11,0.3); }
+  .badge.drama { background: rgba(246,70,93,0.12); color: #ff8a95; border: 1px solid rgba(246,70,93,0.3); }
+
+  /* LOG */
+  .log-wrap {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    max-height: 220px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.8;
+  }
+  .log-line { display: flex; gap: 10px; }
+  .log-ts { color: var(--text3); min-width: 75px; }
+  .log-ok { color: var(--green); }
+  .log-err { color: var(--red); }
+  .log-info { color: #64b5f6; }
+  .log-warn { color: var(--accent); }
+
+  /* POST PREVIEW */
+  .post-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .post-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px 0 0 2px;
+  }
+  .post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .post-type { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .post-time { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .post-body { font-size: 13px; line-height: 1.75; color: var(--text); white-space: pre-wrap; }
+  .hashtags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .htag { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 500; }
+
+  /* PROGRESS BAR */
+  .progress-bar { background: var(--bg4); border-radius: 4px; height: 4px; overflow: hidden; margin: 6px 0; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s ease; }
+
+  /* SCHEDULE */
+  .schedule-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--bg3);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .schedule-row:last-child { border: none; }
+  .sched-label { color: var(--text2); }
+  .sched-val { color: var(--accent); font-weight: 500; }
+  .countdown { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+
+  /* SPINNER */
+  .spin { display: inline-block; animation: rotate 0.8s linear infinite; }
+  @keyframes rotate { to { transform: rotate(360deg); } }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab {
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* RATIO VIZ */
+  .ratio-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; margin: 6px 0; }
+  .ratio-seg { height: 100%; border-radius: 2px; transition: width 0.5s; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    BINANCE AUTO POST
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="next-label">—</span>
+    <div class="status-pill" id="status-pill">
+      <div class="status-dot"></div>
+      <span id="status-text">STOPPED</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- API KEYS -->
+    <div class="card">
+      <div class="card-title">⚙ Config</div>
+      <label>OpenAI API Key</label>
+      <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off"/>
+      <label>Binance API Key</label>
+      <input type="password" id="binance-key" placeholder="Binance API key..." autocomplete="off"/>
+      <label>Binance Secret Key</label>
+      <input type="password" id="binance-secret" placeholder="Binance secret..." autocomplete="off"/>
+      <div class="input-hint">⚠ Cần Binance Square Creator API (Apply tại Square → Creator Program)</div>
+    </div>
+
+    <!-- SCHEDULE CONFIG -->
+    <div class="card">
+      <div class="card-title">⏱ Schedule</div>
+      <label>Interval (phút)</label>
+      <input type="number" id="interval" value="30" min="5" max="1440"/>
+
+      <div class="sep" style="margin:12px 0;"></div>
+
+      <div class="card-title" style="margin-bottom:8px;">📊 Tỉ lệ bài viết</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Binance Spot drama</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="pct-spot">40%</span>
+      </div>
+      <input type="range" id="pct-spot-range" min="0" max="60" value="40" style="width:100%;margin-bottom:6px;"/>
+      <div class="toggle-row">
+        <span class="toggle-label">Binance Futures</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="pct-futures">40%</span>
+      </div>
+      <input type="range" id="pct-futures-range" min="0" max="60" value="40" style="width:100%;margin-bottom:6px;"/>
+      <div class="toggle-row">
+        <span class="toggle-label">Off-chain / Not on Binance</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="pct-off">20%</span>
+      </div>
+      <div class="ratio-bar">
+        <div class="ratio-seg" id="rs-spot" style="background:var(--blue);width:40%"></div>
+        <div class="ratio-seg" id="rs-fut" style="background:var(--purple);width:40%"></div>
+        <div class="ratio-seg" id="rs-off" style="background:var(--accent);width:20%"></div>
+      </div>
+      <div class="input-hint">Spot + Futures + Off-chain = 100%</div>
+    </div>
+
+    <!-- POST CONFIG -->
+    <div class="card">
+      <div class="card-title">✍ Post Settings</div>
+      <label>Ngôn ngữ bài viết</label>
+      <select id="lang">
+        <option value="vi">Tiếng Việt</option>
+        <option value="en">English</option>
+        <option value="bilingual">Song ngữ VI/EN</option>
+      </select>
+      <label>Độ dài bài viết</label>
+      <select id="post-length">
+        <option value="short">Ngắn (~150 từ)</option>
+        <option value="medium" selected>Trung bình (~300 từ)</option>
+        <option value="long">Chi tiết (~500 từ)</option>
+      </select>
+      <label>Tone bài viết</label>
+      <select id="tone">
+        <option value="analytical">Phân tích chuyên sâu</option>
+        <option value="drama" selected>Drama / Hấp dẫn</option>
+        <option value="educational">Giáo dục / Giải thích</option>
+        <option value="alpha">Alpha / Insider tips</option>
+      </select>
+      <label>Custom System Prompt (tùy chọn)</label>
+      <textarea id="custom-prompt" placeholder="VD: Luôn đề cập tới risk management, không financial advice..."></textarea>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card">
+      <div class="card-title">🎮 Control</div>
+      <div class="btn-group">
+        <button class="btn accent" id="btn-start" onclick="startBot()">▶ Start Bot</button>
+        <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Stop</button>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn" style="width:100%;" onclick="runOnce()">↻ Chạy thủ công 1 lần</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn" style="width:100%;" onclick="previewOnly()">👁 Preview (không đăng)</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div class="main">
+
+    <!-- METRICS -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Bài đã đăng</div>
+        <div class="metric-val yellow" id="m-posted">0</div>
+        <div class="metric-sub">tổng cộng</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Lần quét cuối</div>
+        <div class="metric-val" id="m-last" style="font-size:15px;">—</div>
+        <div class="metric-sub" id="m-last-sub">chưa quét</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Coins scanned</div>
+        <div class="metric-val green" id="m-coins">0</div>
+        <div class="metric-sub">spot + futures + off</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Đăng tiếp theo</div>
+        <div class="countdown" id="m-countdown">—</div>
+        <div class="metric-sub">hh:mm:ss</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="card" style="padding:1.25rem;">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('market')">📈 Market Data</div>
+        <div class="tab" onclick="switchTab('preview')">📝 Post Preview</div>
+        <div class="tab" onclick="switchTab('log')">🖥 Live Log</div>
+        <div class="tab" onclick="switchTab('history')">📚 History</div>
+      </div>
+
+      <!-- TAB: MARKET -->
+      <div class="tab-panel active" id="tab-market">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="market-update-time">Chưa quét</span>
+          <button class="btn" onclick="fetchMarket()" id="btn-fetch">
+            <span id="fetch-icon">⟳</span> Quét thị trường
+          </button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn" onclick="filterMarket('all')" id="f-all" style="font-size:11px;padding:4px 10px;">Tất cả</button>
+          <button class="btn" onclick="filterMarket('spot')" id="f-spot" style="font-size:11px;padding:4px 10px;">Spot</button>
+          <button class="btn" onclick="filterMarket('futures')" id="f-futures" style="font-size:11px;padding:4px 10px;">Futures</button>
+          <button class="btn" onclick="filterMarket('drama')" id="f-drama" style="font-size:11px;padding:4px 10px;">🔥 Drama</button>
+          <button class="btn" onclick="filterMarket('off')" id="f-off" style="font-size:11px;padding:4px 10px;">🌐 Off-chain</button>
+        </div>
+        <div id="market-table-wrap" style="overflow-x:auto;">
+          <table class="market-table">
+            <thead><tr>
+              <th>Coin</th><th>Loại</th><th>Giá</th><th>24h %</th><th>Volume 24h</th><th>Drama Signal</th>
+            </tr></thead>
+            <tbody id="market-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono);font-size:12px;">Nhấn "Quét thị trường" để tải dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: PREVIEW -->
+      <div class="tab-panel" id="tab-preview">
+        <div id="preview-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px;">
+          Nhấn "Preview" hoặc chờ bot chạy để xem bài viết được tạo
+        </div>
+        <div id="preview-content" style="display:none;"></div>
+      </div>
+
+      <!-- TAB: LOG -->
+      <div class="tab-panel" id="tab-log">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <button class="btn" onclick="clearLog()" style="font-size:11px;padding:4px 10px;">✕ Clear</button>
+        </div>
+        <div class="log-wrap" id="log-wrap">
+          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Hệ thống khởi động. Nhập API keys và nhấn Start.</span></div>
+        </div>
+      </div>
+
+      <!-- TAB: HISTORY -->
+      <div class="tab-panel" id="tab-history">
+        <div id="history-list">
+          <div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px;">Chưa có bài viết nào được đăng</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ───────────────────────────────────────────
+//  STATE
+// ───────────────────────────────────────────
+const state = {
+  running: false,
+  timer: null,
+  countdownTimer: null,
+  nextRun: null,
+  posted: 0,
+  postHistory: [],
+  marketData: [],
+  marketFilter: 'all',
+};
+
+// ───────────────────────────────────────────
+//  OFF-CHAIN COINS (not on Binance)
+// ───────────────────────────────────────────
+const OFF_CHAIN_COINS = [
+  { id:'kaspa', symbol:'KAS', name:'Kaspa' },
+  { id:'conflux-token', symbol:'CFX', name:'Conflux' },
+  { id:'stacks', symbol:'STX', name:'Stacks' },
+  { id:'bittensor', symbol:'TAO', name:'Bittensor' },
+  { id:'akash-network', symbol:'AKT', name:'Akash' },
+  { id:'celestia', symbol:'TIA', name:'Celestia' },
+  { id:'dymension', symbol:'DYM', name:'Dymension' },
+  { id:'sei-network', symbol:'SEI', name:'Sei' },
+  { id:'zetachain', symbol:'ZETA', name:'ZetaChain' },
+  { id:'lido-dao', symbol:'LDO', name:'Lido DAO' },
+];
+
+// DRAMA KEYWORDS
+const DRAMA_SIGNALS = {
+  'BTC': 'ETF flows cực mạnh',
+  'ETH': 'Staking yield thay đổi',
+  'SOL': 'Network congestion',
+  'BNB': 'Burn event sắp tới',
+  'XRP': 'SEC lawsuit update',
+  'DOGE': 'Elon tweet effect',
+  'ADA': 'Governance vote',
+  'AVAX': 'Subnet mới launch',
+  'LINK': 'Oracle update',
+  'DOT': 'Parachain auction',
+};
+
+// ───────────────────────────────────────────
+//  RATIO SLIDER LOGIC
+// ───────────────────────────────────────────
+const spotRange = document.getElementById('pct-spot-range');
+const futRange = document.getElementById('pct-futures-range');
+
+function updateRatios() {
+  let s = parseInt(spotRange.value);
+  let f = parseInt(futRange.value);
+  if (s + f > 80) { f = 80 - s; futRange.value = f; }
+  let o = 100 - s - f;
+  if (o < 0) { o = 0; s = 100 - f; spotRange.value = s; }
+  document.getElementById('pct-spot').textContent = s + '%';
+  document.getElementById('pct-futures').textContent = f + '%';
+  document.getElementById('pct-off').textContent = o + '%';
+  document.getElementById('rs-spot').style.width = s + '%';
+  document.getElementById('rs-fut').style.width = f + '%';
+  document.getElementById('rs-off').style.width = o + '%';
+}
+spotRange.oninput = updateRatios;
+futRange.oninput = updateRatios;
+
+// ───────────────────────────────────────────
+//  FETCH MARKET DATA (CoinGecko free)
+// ───────────────────────────────────────────
+async function fetchMarket() {
+  const icon = document.getElementById('fetch-icon');
+  const btn = document.getElementById('btn-fetch');
+  icon.className = 'spin'; btn.disabled = true;
+  addLog('info', 'Đang quét thị trường từ CoinGecko...');
+
+  try {
+    // Top 50 by market cap
+    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h';
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // Also fetch off-chain coins
+    const offIds = OFF_CHAIN_COINS.map(c=>c.id).join(',');
+    const offUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${offIds}&sparkline=false&price_change_percentage=24h`;
+    const offRes = await fetch(offUrl);
+    const offData = await offRes.json();
+
+    // FUTURES coins (subset)
+    const FUTURES_COINS = ['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','BCH','TRX','NEAR','FTM','ICP','OP','ARB','APT','SUI','INJ','WLD'];
+
+    state.marketData = [];
+
+    data.forEach(coin => {
+      const sym = coin.symbol.toUpperCase();
+      let type = 'spot';
+      if (FUTURES_COINS.includes(sym)) type = Math.random() > 0.4 ? 'futures' : 'spot';
+      state.marketData.push({
+        symbol: sym,
+        name: coin.name,
+        price: coin.current_price,
+        change: coin.price_change_percentage_24h,
+        volume: coin.total_volume,
+        type,
+        drama: Math.abs(coin.price_change_percentage_24h || 0) > 5 || DRAMA_SIGNALS[sym],
+        dramaLabel: DRAMA_SIGNALS[sym] || (Math.abs(coin.price_change_percentage_24h||0) > 8 ? '🚀 Pump mạnh' : Math.abs(coin.price_change_percentage_24h||0) > 5 ? '⚡ Biến động' : '—'),
+      });
+    });
+
+    offData.forEach(coin => {
+      state.marketData.push({
+        symbol: coin.symbol.toUpperCase(),
+        name: coin.name,
+        price: coin.current_price,
+        change: coin.price_change_percentage_24h,
+        volume: coin.total_volume,
+        type: 'off-chain',
+        drama: Math.abs(coin.price_change_percentage_24h||0) > 5,
+        dramaLabel: Math.abs(coin.price_change_percentage_24h||0) > 5 ? '⚡ Biến động' : '—',
+      });
+    });
+
+    document.getElementById('m-coins').textContent = state.marketData.length;
+    document.getElementById('market-update-time').textContent = 'Cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN');
+    addLog('ok', `Đã quét ${state.marketData.length} coins (${data.length} on-chain, ${offData.length} off-chain)`);
+    renderMarketTable();
+
+  } catch(e) {
+    addLog('err', 'Lỗi fetch market: ' + e.message);
+  }
+
+  icon.className = ''; icon.textContent = '⟳'; btn.disabled = false;
+}
+
+function renderMarketTable(filter) {
+  if (filter) state.marketFilter = filter;
+  const f = state.marketFilter;
+  let data = state.marketData;
+  if (f === 'spot') data = data.filter(c=>c.type==='spot');
+  else if (f === 'futures') data = data.filter(c=>c.type==='futures'||c.type==='spot');
+  else if (f === 'drama') data = data.filter(c=>c.drama);
+  else if (f === 'off') data = data.filter(c=>c.type==='off-chain');
+
+  const tbody = document.getElementById('market-tbody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono);font-size:12px;">Không có dữ liệu</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.slice(0,40).map(c => {
+    const chg = c.change ? c.change.toFixed(2) : '0.00';
+    const cls = parseFloat(chg) >= 0 ? 'up' : 'down';
+    const sign = parseFloat(chg) >= 0 ? '+' : '';
+    const vol = formatVol(c.volume);
+    const typeTag = c.type === 'off-chain'
+      ? '<span class="badge off-chain">OFF-CHAIN</span>'
+      : c.type === 'futures'
+      ? '<span class="badge futures">FUTURES</span>'
+      : '<span class="badge spot">SPOT</span>';
+    const dramaTag = c.drama ? '<span class="badge drama">DRAMA</span>' : '';
+    return `<tr>
+      <td><span class="coin-name">$${c.symbol}</span> <span class="coin-tag">${c.name}</span></td>
+      <td>${typeTag}</td>
+      <td style="font-family:var(--mono);">$${formatPrice(c.price)}</td>
+      <td class="${cls}" style="font-family:var(--mono);font-weight:600;">${sign}${chg}%</td>
+      <td style="font-family:var(--mono);color:var(--text2);">$${vol}</td>
+      <td>${dramaTag} <span style="font-size:11px;color:var(--text2);">${c.dramaLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterMarket(f) {
+  state.marketFilter = f;
+  renderMarketTable();
+}
+
+function formatPrice(p) {
+  if (!p) return '0';
+  if (p > 1000) return p.toLocaleString('en-US', {maximumFractionDigits:0});
+  if (p > 1) return p.toFixed(2);
+  return p.toFixed(6);
+}
+function formatVol(v) {
+  if (!v) return '0';
+  if (v > 1e9) return (v/1e9).toFixed(2)+'B';
+  if (v > 1e6) return (v/1e6).toFixed(1)+'M';
+  if (v > 1e3) return (v/1e3).toFixed(0)+'K';
+  return v.toString();
+}
+
+// ───────────────────────────────────────────
+//  PICK COIN TO POST
+// ───────────────────────────────────────────
+function pickCoinForPost() {
+  const s = parseInt(spotRange.value);
+  const f = parseInt(futRange.value);
+  const o = 100 - s - f;
+  const r = Math.random() * 100;
+
+  let pool;
+  if (r < o) {
+    // off-chain post
+    pool = state.marketData.filter(c=>c.type==='off-chain');
+    if (!pool.length) pool = state.marketData.slice(0,5);
+    return { coin: pool[Math.floor(Math.random()*pool.length)], category: 'off-chain' };
+  } else if (r < o + s) {
+    // spot drama
+    let spots = state.marketData.filter(c=>c.type==='spot');
+    let drama = spots.filter(c=>c.drama);
+    pool = drama.length ? drama : spots;
+    return { coin: pool[Math.floor(Math.random()*Math.min(pool.length,10))], category: 'spot' };
+  } else {
+    // futures
+    let futs = state.marketData.filter(c=>c.type==='futures'||c.type==='spot');
+    let drama = futs.filter(c=>c.drama);
+    pool = drama.length ? drama : futs;
+    return { coin: pool[Math.floor(Math.random()*Math.min(pool.length,10))], category: 'futures' };
+  }
+}
+
+// ───────────────────────────────────────────
+//  GENERATE POST WITH OPENAI
+// ───────────────────────────────────────────
+async function generatePost(coin, category) {
+  const key = document.getElementById('openai-key').value.trim();
+  if (!key) throw new Error('Chưa nhập OpenAI API key');
+
+  const lang = document.getElementById('lang').value;
+  const length = document.getElementById('post-length').value;
+  const tone = document.getElementById('tone').value;
+  const customPrompt = document.getElementById('custom-prompt').value.trim();
+
+  const langMap = { vi: 'Vietnamese', en: 'English', bilingual: 'bilingual Vietnamese and English (Vietnamese first, English translation below)' };
+  const lengthMap = { short: '100-150 words', medium: '250-320 words', long: '450-550 words' };
+  const toneMap = {
+    analytical: 'deep analytical, data-driven, professional trader perspective',
+    drama: 'dramatic, engaging, use urgency and FOMO language, crypto Twitter style',
+    educational: 'educational, explain concepts clearly, suitable for beginners',
+    alpha: 'alpha hunter style, insider tips, on-chain signals, forward-looking',
+  };
+
+  const chg = coin.change ? coin.change.toFixed(2) : '0';
+  const sign = parseFloat(chg) >= 0 ? '+' : '';
+
+  const categoryContext = category === 'off-chain'
+    ? `This coin is NOT listed on Binance. Mention this and why it matters for portfolio diversification.`
+    : category === 'futures'
+    ? `Focus on futures/derivatives angle, funding rates, open interest, liquidation levels if relevant.`
+    : `Focus on spot market dynamics, accumulation/distribution, on-chain activity.`;
+
+  const systemPrompt = `You are a professional crypto analyst and content creator for Binance Square (Binance's social feed platform).
+Write engaging posts that drive engagement. ${customPrompt ? customPrompt : 'Always add a disclaimer: Not financial advice.'}`;
+
+  const userPrompt = `Write a Binance Square post about $${coin.symbol} (${coin.name}).
+
+Market data:
+- Current price: $${formatPrice(coin.price)}
+- 24h change: ${sign}${chg}%
+- 24h volume: $${formatVol(coin.volume)}
+- Market context: ${coin.dramaLabel}
+- Category: ${category}
+
+Post requirements:
+- Language: ${langMap[lang]}
+- Length: ${lengthMap[length]}
+- Tone: ${toneMap[tone]}
+- ${categoryContext}
+- End with 3-6 relevant hashtags using $ format: $${coin.symbol}, and related coins/topics
+- Make it feel authentic, not AI-generated
+- Include a key insight or alpha that traders would find valuable
+
+Return ONLY the post content + hashtags. No title, no extra formatting.`;
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 800,
+      temperature: 0.85,
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || 'OpenAI API error');
+  }
+
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+// ───────────────────────────────────────────
+//  POST TO BINANCE SQUARE
+// ───────────────────────────────────────────
+async function postToBinance(content, coin) {
+  const apiKey = document.getElementById('binance-key').value.trim();
+  const secret = document.getElementById('binance-secret').value.trim();
+  if (!apiKey || !secret) throw new Error('Chưa nhập Binance API key / secret');
+
+  // Extract hashtags from content
+  const hashtagMatches = content.match(/\$[A-Z]+/g) || [];
+  const tags = [...new Set(hashtagMatches)];
+
+  // NOTE: Binance Square API endpoint (requires Creator Program approval)
+  // POST https://www.binance.com/bapi/composite/v1/public/square/post/create
+  // This requires HMAC SHA256 signature. In production, this should be a backend call.
+  // For demonstration, we show the payload that would be sent.
+
+  const timestamp = Date.now();
+  const payload = {
+    content: content,
+    tags: tags,
+    type: 1, // 1 = text post
+    timestamp,
+  };
+
+  addLog('warn', `[BINANCE API] POST payload preview: ${JSON.stringify(payload).substring(0,100)}...`);
+  addLog('warn', `⚠ Để đăng thật, cần backend server ký HMAC. Xem README.`);
+
+  // Simulated success for demo
+  return { success: true, postId: 'POST_' + timestamp, simulated: true };
+}
+
+// ───────────────────────────────────────────
+//  MAIN CYCLE
+// ───────────────────────────────────────────
+async function runCycle(postFlag = true) {
+  addLog('info', '── Bắt đầu chu kỳ mới ──');
+
+  // 1. Fetch market
+  await fetchMarket();
+
+  if (!state.marketData.length) {
+    addLog('err', 'Không có dữ liệu thị trường, bỏ qua chu kỳ này');
+    return;
+  }
+
+  // 2. Pick coin
+  const { coin, category } = pickCoinForPost();
+  addLog('info', `Chọn: $${coin.symbol} [${category}] — ${coin.change?.toFixed(2)}% 24h`);
+
+  // 3. Generate post
+  addLog('info', `Gọi OpenAI để tạo bài viết về $${coin.symbol}...`);
+  let content;
+  try {
+    content = await generatePost(coin, category);
+    addLog('ok', `Đã tạo xong bài viết (${content.length} ký tự)`);
+  } catch(e) {
+    addLog('err', 'Lỗi OpenAI: ' + e.message);
+    return;
+  }
+
+  // 4. Preview
+  showPreview(content, coin, category);
+
+  // 5. Post
+  if (postFlag) {
+    try {
+      const res = await postToBinance(content, coin);
+      if (res.success) {
+        state.posted++;
+        document.getElementById('m-posted').textContent = state.posted;
+        addLog('ok', `✓ Đã đăng bài #${state.posted} — postId: ${res.postId}${res.simulated?' [SIMULATED]':''}`);
+        addToHistory(content, coin, category, res.postId);
+      }
+    } catch(e) {
+      addLog('err', 'Lỗi Binance API: ' + e.message);
+    }
+  }
+}
+
+// ───────────────────────────────────────────
+//  UI HELPERS
+// ───────────────────────────────────────────
+function showPreview(content, coin, category) {
+  const typeColor = category === 'off-chain' ? 'var(--accent)' : category === 'futures' ? 'var(--purple)' : 'var(--blue)';
+  const typeLabel = category === 'off-chain' ? 'OFF-CHAIN' : category === 'futures' ? 'FUTURES' : 'SPOT';
+
+  // Separate hashtags
+  const lines = content.split('\n');
+  const hashLines = lines.filter(l => l.match(/^\$[A-Z]/) || l.match(/\$[A-Z]{2,}/g));
+  const bodyLines = lines.filter(l => !hashLines.includes(l));
+  const hashtags = [...new Set(content.match(/\$[A-Z]+/g) || [])];
+
+  const html = `<div class="post-card">
+    <div class="post-meta">
+      <span class="post-type badge" style="background:rgba(0,0,0,0.2);color:${typeColor};border:1px solid ${typeColor}40;">${typeLabel}</span>
+      <span class="badge spot">$${coin.symbol}</span>
+      <span class="post-time">${new Date().toLocaleString('vi-VN')}</span>
+    </div>
+    <div class="post-body">${escHtml(content)}</div>
+  </div>`;
+
+  document.getElementById('preview-empty').style.display = 'none';
+  document.getElementById('preview-content').style.display = 'block';
+  document.getElementById('preview-content').innerHTML = html;
+  switchTab('preview');
+}
+
+function addToHistory(content, coin, category, postId) {
+  const el = document.getElementById('history-list');
+  if (el.children.length === 1 && el.children[0].tagName === 'DIV' && el.children[0].textContent.includes('Chưa có')) {
+    el.innerHTML = '';
+  }
+  const typeLabel = category === 'off-chain' ? 'OFF-CHAIN' : category === 'futures' ? 'FUTURES' : 'SPOT';
+  const item = document.createElement('div');
+  item.className = 'post-card';
+  item.style.marginBottom = '12px';
+  item.innerHTML = `<div class="post-meta">
+    <span class="badge ${category === 'off-chain' ? 'off-chain' : category === 'futures' ? 'futures' : 'spot'}">${typeLabel}</span>
+    <span class="badge spot">$${coin.symbol}</span>
+    <span class="post-time">${new Date().toLocaleString('vi-VN')} — ID: ${postId}</span>
+  </div>
+  <div class="post-body" style="max-height:100px;overflow:hidden;">${escHtml(content.substring(0,300))}${content.length>300?'...':''}</div>`;
+  el.prepend(item);
+}
+
+function addLog(type, msg) {
+  const wrap = document.getElementById('log-wrap');
+  const ts = new Date().toLocaleTimeString('vi-VN');
+  const cls = { ok:'log-ok', err:'log-err', info:'log-info', warn:'log-warn' }[type] || 'log-info';
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">${ts}</span><span class="${cls}">${escHtml(msg)}</span>`;
+  wrap.appendChild(line);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log-wrap').innerHTML = '';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['market','preview','log','history'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + name);
+  });
+}
+
+// ───────────────────────────────────────────
+//  COUNTDOWN
+// ───────────────────────────────────────────
+function startCountdown() {
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  state.countdownTimer = setInterval(() => {
+    if (!state.nextRun) return;
+    const diff = state.nextRun - Date.now();
+    if (diff <= 0) {
+      document.getElementById('m-countdown').textContent = '00:00';
+      return;
+    }
+    const m = Math.floor(diff / 60000).toString().padStart(2,'0');
+    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
+    document.getElementById('m-countdown').textContent = m + ':' + s;
+    document.getElementById('next-label').textContent = 'Đăng lúc ' + new Date(state.nextRun).toLocaleTimeString('vi-VN');
+  }, 1000);
+}
+
+// ───────────────────────────────────────────
+//  BOT CONTROL
+// ───────────────────────────────────────────
+async function startBot() {
+  state.running = true;
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-stop').disabled = false;
+  document.getElementById('status-pill').className = 'status-pill running';
+  document.getElementById('status-text').textContent = 'RUNNING';
+  addLog('ok', 'Bot bắt đầu chạy!');
+
+  const intervalMin = parseInt(document.getElementById('interval').value) || 30;
+  const intervalMs = intervalMin * 60 * 1000;
+
+  // Run immediately
+  await runCycle(true);
+
+  // Then schedule
+  state.timer = setInterval(async () => {
+    if (!state.running) return;
+    state.nextRun = Date.now() + intervalMs;
+    await runCycle(true);
+  }, intervalMs);
+
+  state.nextRun = Date.now() + intervalMs;
+  startCountdown();
+  document.getElementById('m-last').textContent = new Date().toLocaleTimeString('vi-VN');
+  document.getElementById('m-last-sub').textContent = 'lần quét gần nhất';
+}
+
+function stopBot() {
+  state.running = false;
+  if (state.timer) clearInterval(state.timer);
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  state.nextRun = null;
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+  document.getElementById('status-pill').className = 'status-pill';
+  document.getElementById('status-text').textContent = 'STOPPED';
+  document.getElementById('m-countdown').textContent = '—';
+  document.getElementById('next-label').textContent = '—';
+  addLog('warn', 'Bot đã dừng.');
+}
+
+async function runOnce() {
+  addLog('info', 'Chạy thủ công 1 lần...');
+  await runCycle(true);
+  document.getElementById('m-last').textContent = new Date().toLocaleTimeString('vi-VN');
+}
+
+async function previewOnly() {
+  addLog('info', 'Preview mode (không đăng)...');
+  if (!state.marketData.length) await fetchMarket();
+  if (!state.marketData.length) { addLog('err', 'Không có dữ liệu'); return; }
+  const { coin, category } = pickCoinForPost();
+  try {
+    const content = await generatePost(coin, category);
+    showPreview(content, coin, category);
+    addLog('ok', `Preview xong: $${coin.symbol} [${category}]`);
+  } catch(e) {
+    addLog('err', e.message);
+  }
+}
+</script>
+
+</body>
+</html>
