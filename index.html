@@ -373,7 +373,9 @@
       <input type="password" id="binance-key" placeholder="Binance API key..." autocomplete="off"/>
       <label>Binance Secret Key</label>
       <input type="password" id="binance-secret" placeholder="Binance secret..." autocomplete="off"/>
-      <div class="input-hint">⚠ Cần Binance Square Creator API (Apply tại Square → Creator Program)</div>
+      <label>CoinMarketCap API Key (All Market Data)</label>
+      <input type="password" id="cmc-key" placeholder="CMC-API-KEY..." autocomplete="off"/>
+      <div class="input-hint">⚠ CMC API Key dùng để quét toàn bộ thị trường.</div>
     </div>
 
     <div class="card">
@@ -414,12 +416,8 @@
         <option value="en">English</option>
         <option value="bilingual" selected>Song ngữ VI/EN</option>
       </select>
-      <label>Độ dài bài viết</label>
-      <select id="post-length">
-        <option value="short">Ngắn (~150 từ)</option>
-        <option value="medium" selected>Trung bình (~300 từ)</option>
-        <option value="long">Chi tiết (~500 từ)</option>
-      </select>
+      <label>Độ dài chính xác (số ký tự)</label>
+      <input type="number" id="post-char-limit" value="1500" placeholder="VD: 1500"/>
       <label>Tone bài viết</label>
       <select id="tone">
         <option value="analytical">Phân tích chuyên sâu</option>
@@ -463,7 +461,7 @@
       <div class="metric">
         <div class="metric-label">Coins scanned</div>
         <div class="metric-val green" id="m-coins">0</div>
-        <div class="metric-sub">spot + futures + off</div>
+        <div class="metric-sub">CEX + DEX + All Market</div>
       </div>
       <div class="metric">
         <div class="metric-label">Đăng tiếp theo</div>
@@ -484,7 +482,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="market-update-time">Chưa quét</span>
           <button class="btn" onclick="fetchMarket()" id="btn-fetch">
-            <span id="fetch-icon">⟳</span> Quét thị trường
+            <span id="fetch-icon">⟳</span> Quét toàn bộ thị trường
           </button>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
@@ -545,7 +543,7 @@ const state = {
   postHistory: [],
   marketData: [],
   marketFilter: 'all',
-  newsData: [], // NEW: Tích hợp news
+  newsData: [],
 };
 
 // ───────────────────────────────────────────
@@ -564,7 +562,6 @@ const OFF_CHAIN_COINS = [
   { id:'lido-dao', symbol:'LDO', name:'Lido DAO' },
 ];
 
-// DRAMA KEYWORDS
 const DRAMA_SIGNALS = {
   'BTC': 'ETF flows cực mạnh',
   'ETH': 'Staking yield thay đổi',
@@ -601,50 +598,65 @@ spotRange.oninput = updateRatios;
 futRange.oninput = updateRatios;
 
 // ───────────────────────────────────────────
-//  FETCH MARKET DATA & NEWS (INTEGRATED 2A)
+//  FETCH MARKET DATA (CMC & CRYPTO COMPARE)
 // ───────────────────────────────────────────
 async function fetchNews() {
   try {
-    const res = await fetch('https://cryptopanic.com/api/v1/posts/?auth_token=6b28038743f5f3e9b177e77b4742a12154562590&public=true&filter=hot');
+    // CryptoCompare News API (All market sentiment)
+    const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
     const data = await res.json();
-    state.newsData = data.results ? data.results.slice(0, 10) : [];
-    addLog('info', `Đã quét ${state.newsData.length} tin tức nóng hổi từ CryptoPanic`);
+    state.newsData = data.Data ? data.Data.slice(0, 15) : [];
+    addLog('info', `Đã quét ${state.newsData.length} tin tức vĩ mô từ CryptoCompare`);
   } catch(e) {
     addLog('err', 'Lỗi fetch news: ' + e.message);
   }
 }
 
 async function fetchMarket() {
+  const cmcKey = document.getElementById('cmc-key').value.trim();
   const icon = document.getElementById('fetch-icon');
   const btn = document.getElementById('btn-fetch');
   icon.className = 'spin'; btn.disabled = true;
-  addLog('info', 'Đang quét thị trường và tin tức...');
+  addLog('info', 'Đang quét toàn bộ thị trường (CMC & CryptoCompare)...');
 
   try {
-    // 2A: Tích hợp quét news
     await fetchNews();
 
-    // Top 50 by market cap
-    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h';
-    const res = await fetch(url);
-    const data = await res.json();
+    let data;
+    if (cmcKey) {
+        // Tích hợp CoinMarketCap API nếu có Key
+        const res = await fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=50`, {
+            headers: { 'X-CMC_PRO_API_KEY': cmcKey }
+        });
+        const json = await res.json();
+        data = json.data.map(c => ({
+            symbol: c.symbol,
+            name: c.name,
+            current_price: c.quote.USD.price,
+            price_change_percentage_24h: c.quote.USD.percent_change_24h,
+            total_volume: c.quote.USD.volume_24h
+        }));
+    } else {
+        // Fallback về CryptoCompare (Free/No Key)
+        addLog('warn', 'Không có CMC Key, sử dụng dữ liệu CryptoCompare...');
+        const res = await fetch('https://min-api.cryptocompare.com/data/top/mktcapfull?limit=50&tsym=USD');
+        const json = await res.json();
+        data = json.Data.map(c => ({
+            symbol: c.CoinInfo.Name,
+            name: c.CoinInfo.FullName,
+            current_price: c.RAW.USD.PRICE,
+            price_change_percentage_24h: c.RAW.USD.CHANGEPCT24HOUR,
+            total_volume: c.RAW.USD.VOLUME24HOUR
+        }));
+    }
 
-    // Also fetch off-chain coins
-    const offIds = OFF_CHAIN_COINS.map(c=>c.id).join(',');
-    const offUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${offIds}&sparkline=false&price_change_percentage=24h`;
-    const offRes = await fetch(offUrl);
-    const offData = await offRes.json();
-
-    // FUTURES coins (subset)
     const FUTURES_COINS = ['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','BCH','TRX','NEAR','FTM','ICP','OP','ARB','APT','SUI','INJ','WLD'];
 
-    state.marketData = [];
-
-    data.forEach(coin => {
+    state.marketData = data.map(coin => {
       const sym = coin.symbol.toUpperCase();
       let type = 'spot';
       if (FUTURES_COINS.includes(sym)) type = Math.random() > 0.4 ? 'futures' : 'spot';
-      state.marketData.push({
+      return {
         symbol: sym,
         name: coin.name,
         price: coin.current_price,
@@ -653,29 +665,16 @@ async function fetchMarket() {
         type,
         drama: Math.abs(coin.price_change_percentage_24h || 0) > 5 || DRAMA_SIGNALS[sym],
         dramaLabel: DRAMA_SIGNALS[sym] || (Math.abs(coin.price_change_percentage_24h||0) > 8 ? '🚀 Pump mạnh' : Math.abs(coin.price_change_percentage_24h||0) > 5 ? '⚡ Biến động' : '—'),
-      });
-    });
-
-    offData.forEach(coin => {
-      state.marketData.push({
-        symbol: coin.symbol.toUpperCase(),
-        name: coin.name,
-        price: coin.current_price,
-        change: coin.price_change_percentage_24h,
-        volume: coin.total_volume,
-        type: 'off-chain',
-        drama: Math.abs(coin.price_change_percentage_24h||0) > 5,
-        dramaLabel: Math.abs(coin.price_change_percentage_24h||0) > 5 ? '⚡ Biến động' : '—',
-      });
+      };
     });
 
     document.getElementById('m-coins').textContent = state.marketData.length;
-    document.getElementById('market-update-time').textContent = 'Cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN');
-    addLog('ok', `Đã quét ${state.marketData.length} coins và tin tức thị trường`);
+    document.getElementById('market-update-time').textContent = 'Cập nhật CMC lúc ' + new Date().toLocaleTimeString('vi-VN');
+    addLog('ok', `Đã quét ${state.marketData.length} coins toàn thị trường.`);
     renderMarketTable();
 
   } catch(e) {
-    addLog('err', 'Lỗi fetch market: ' + e.message);
+    addLog('err', 'Lỗi quét dữ liệu: ' + e.message);
   }
 
   icon.className = ''; icon.textContent = '⟳'; btn.disabled = false;
@@ -748,18 +747,15 @@ function pickCoinForPost() {
 
   let pool;
   if (r < o) {
-    // off-chain post
     pool = state.marketData.filter(c=>c.type==='off-chain');
     if (!pool.length) pool = state.marketData.slice(0,5);
     return { coin: pool[Math.floor(Math.random()*pool.length)], category: 'off-chain' };
   } else if (r < o + s) {
-    // spot drama
     let spots = state.marketData.filter(c=>c.type==='spot');
     let drama = spots.filter(c=>c.drama);
     pool = drama.length ? drama : spots;
     return { coin: pool[Math.floor(Math.random()*Math.min(pool.length,10))], category: 'spot' };
   } else {
-    // futures
     let futs = state.marketData.filter(c=>c.type==='futures'||c.type==='spot');
     let drama = futs.filter(c=>c.drama);
     pool = drama.length ? drama : futs;
@@ -768,19 +764,18 @@ function pickCoinForPost() {
 }
 
 // ───────────────────────────────────────────
-//  GENERATE POST WITH OPENAI (2A INTEGRATED PROMPT)
+//  GENERATE POST WITH OPENAI
 // ───────────────────────────────────────────
 async function generatePost(coin, category) {
   const key = document.getElementById('openai-key').value.trim();
   if (!key) throw new Error('Chưa nhập OpenAI API key');
 
   const lang = document.getElementById('lang').value;
-  const length = document.getElementById('post-length').value;
+  const charLimit = document.getElementById('post-char-limit').value || 1500;
   const tone = document.getElementById('tone').value;
   const customPrompt = document.getElementById('custom-prompt').value.trim();
 
   const langMap = { vi: 'Vietnamese', en: 'English', bilingual: 'bilingual Vietnamese and English (Vietnamese first, English translation below)' };
-  const lengthMap = { short: '100-150 words', medium: '250-320 words', long: '450-550 words' };
   const toneMap = {
     analytical: 'deep analytical, data-driven, professional trader perspective',
     drama: 'dramatic, engaging, use urgency and FOMO language, crypto Twitter style',
@@ -788,45 +783,25 @@ async function generatePost(coin, category) {
     alpha: 'alpha hunter style, insider tips, on-chain signals, forward-looking',
   };
 
-  const chg = coin.change ? coin.change.toFixed(2) : '0';
-  const sign = parseFloat(chg) >= 0 ? '+' : '';
-
-  // 2A: Tích hợp news context vào prompt
-  const newsContext = state.newsData.map(n => `- ${n.title}`).join('\n');
-
-  const categoryContext = category === 'off-chain'
-    ? `This coin is NOT listed on Binance. Mention this and why it matters for portfolio diversification.`
-    : category === 'futures'
-    ? `Focus on futures/derivatives angle, funding rates, open interest, liquidation levels if relevant.`
-    : `Focus on spot market dynamics, accumulation/distribution, on-chain activity.`;
+  const newsContext = state.newsData.map(n => `- ${n.title}: ${n.body?.substring(0,100)}...`).join('\n');
 
   const systemPrompt = `You are a professional Crypto Data Researcher for Binance Square.
-Your goal is to analyze data and provide deep insights, NOT just repetitive news. 
-Write engaging posts that drive engagement. ${customPrompt ? customPrompt : 'Always add a disclaimer: Not financial advice.'}`;
+Your goal is to analyze data and provide deep insights. ${customPrompt ? customPrompt : 'Always add a disclaimer: Not financial advice.'}`;
 
   const userPrompt = `Write a Binance Square post about $${coin.symbol} (${coin.name}) as a Researcher.
 
-Market data:
-- Current price: $${formatPrice(coin.price)}
-- 24h change: ${sign}${chg}%
-- 24h volume: $${formatVol(coin.volume)}
-- Market context: ${coin.dramaLabel}
-- Category: ${category}
+Market data: $${formatPrice(coin.price)}, 24h: ${coin.change?.toFixed(2)}%, Volume: $${formatVol(coin.volume)}, Type: ${category}.
 
-Hot Market News (Context for you to cross-reference):
+Hot Global News:
 ${newsContext}
 
-Post requirements:
+Requirements:
 - Language: ${langMap[lang]}
-- Length: ${lengthMap[length]}
+- Length: EXACTLY around ${charLimit} characters.
 - Tone: ${toneMap[tone]}
-- ${categoryContext}
-- If any hot news relates to this coin or the current market sentiment, mention it to act as a researcher.
-- End with 3-6 relevant hashtags using $ format: $${coin.symbol}, and related coins/topics
-- Make it feel authentic, not AI-generated
-- Include a key insight or alpha that traders would find valuable
-
-Return ONLY the post content + hashtags. No title, no extra formatting.`;
+- Mention relevant global news if it impacts the sentiment.
+- End with 3-6 relevant hashtags using $ format: $${coin.symbol}.
+- Return ONLY content.`;
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -837,18 +812,24 @@ Return ONLY the post content + hashtags. No title, no extra formatting.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 1000,
+      max_tokens: 1500,
       temperature: 0.85,
     })
   });
 
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || 'OpenAI API error');
-  }
-
   const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'OpenAI Error');
   return data.choices[0].message.content;
+}
+
+// ───────────────────────────────────────────
+//  COPY CLIPBOARD
+// ───────────────────────────────────────────
+function copyText(id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        addLog('info', 'Đã copy văn bản vào bộ nhớ tạm!');
+    });
 }
 
 // ───────────────────────────────────────────
@@ -859,19 +840,8 @@ async function postToBinance(content, coin) {
   const secret = document.getElementById('binance-secret').value.trim();
   if (!apiKey || !secret) throw new Error('Chưa nhập Binance API key / secret');
 
-  const hashtagMatches = content.match(/\$[A-Z]+/g) || [];
-  const tags = [...new Set(hashtagMatches)];
-
   const timestamp = Date.now();
-  const payload = {
-    content: content,
-    tags: tags,
-    type: 1, // 1 = text post
-    timestamp,
-  };
-
-  addLog('warn', `[BINANCE API] POST payload preview: ${JSON.stringify(payload).substring(0,100)}...`);
-  addLog('warn', `⚠ Để đăng thật, cần backend server ký HMAC. Xem README.`);
+  addLog('warn', `⚠ Cần backend ký HMAC để đăng thật. Preview nội dung bài viết bên dưới.`);
 
   return { success: true, postId: 'POST_' + timestamp, simulated: true };
 }
@@ -880,47 +850,28 @@ async function postToBinance(content, coin) {
 //  MAIN CYCLE
 // ───────────────────────────────────────────
 async function runCycle(postFlag = true) {
-  addLog('info', '── Bắt đầu chu kỳ nghiên cứu mới ──');
-
-  // 1. Fetch market & News (2A)
+  addLog('info', '── Bắt đầu chu kỳ Researcher ──');
   await fetchMarket();
 
-  if (!state.marketData.length) {
-    addLog('err', 'Không có dữ liệu thị trường, bỏ qua chu kỳ này');
-    return;
-  }
+  if (!state.marketData.length) return;
 
-  // 2. Pick coin
   const { coin, category } = pickCoinForPost();
-  addLog('info', `Chọn: $${coin.symbol} [${category}] — ${coin.change?.toFixed(2)}% 24h`);
-
-  // 3. Generate post
-  addLog('info', `Gọi OpenAI để phân tích dữ liệu về $${coin.symbol}...`);
-  let content;
+  addLog('info', `Phân tích: $${coin.symbol}...`);
+  
   try {
-    content = await generatePost(coin, category);
-    addLog('ok', `Đã phân tích xong bài viết (${content.length} ký tự)`);
-  } catch(e) {
-    addLog('err', 'Lỗi OpenAI: ' + e.message);
-    return;
-  }
+    const content = await generatePost(coin, category);
+    showPreview(content, coin, category);
 
-  // 4. Preview
-  showPreview(content, coin, category);
-
-  // 5. Post
-  if (postFlag) {
-    try {
+    if (postFlag) {
       const res = await postToBinance(content, coin);
       if (res.success) {
         state.posted++;
         document.getElementById('m-posted').textContent = state.posted;
-        addLog('ok', `✓ Đã đăng bài #${state.posted} — postId: ${res.postId}${res.simulated?' [SIMULATED]':''}`);
         addToHistory(content, coin, category, res.postId);
       }
-    } catch(e) {
-      addLog('err', 'Lỗi Binance API: ' + e.message);
     }
+  } catch(e) {
+    addLog('err', e.message);
   }
 }
 
@@ -929,15 +880,13 @@ async function runCycle(postFlag = true) {
 // ───────────────────────────────────────────
 function showPreview(content, coin, category) {
   const typeColor = category === 'off-chain' ? 'var(--accent)' : category === 'futures' ? 'var(--purple)' : 'var(--blue)';
-  const typeLabel = category === 'off-chain' ? 'OFF-CHAIN' : category === 'futures' ? 'FUTURES' : 'SPOT';
-
   const html = `<div class="post-card">
     <div class="post-meta">
-      <span class="post-type badge" style="background:rgba(0,0,0,0.2);color:${typeColor};border:1px solid ${typeColor}40;">${typeLabel}</span>
+      <span class="badge" style="border:1px solid ${typeColor}">${category.toUpperCase()}</span>
       <span class="badge spot">$${coin.symbol}</span>
-      <span class="post-time">${new Date().toLocaleString('vi-VN')}</span>
+      <button class="btn" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="copyText('preview-body-text')">📋 Copy</button>
     </div>
-    <div class="post-body">${escHtml(content)}</div>
+    <div class="post-body" id="preview-body-text">${escHtml(content)}</div>
   </div>`;
 
   document.getElementById('preview-empty').style.display = 'none';
@@ -948,19 +897,17 @@ function showPreview(content, coin, category) {
 
 function addToHistory(content, coin, category, postId) {
   const el = document.getElementById('history-list');
-  if (el.children.length === 1 && el.children[0].tagName === 'DIV' && el.children[0].textContent.includes('Chưa có')) {
-    el.innerHTML = '';
-  }
-  const typeLabel = category === 'off-chain' ? 'OFF-CHAIN' : category === 'futures' ? 'FUTURES' : 'SPOT';
+  if (el.children[0]?.textContent.includes('Chưa có')) el.innerHTML = '';
+  
   const item = document.createElement('div');
   item.className = 'post-card';
   item.style.marginBottom = '12px';
+  const historyId = 'hist-' + Date.now();
   item.innerHTML = `<div class="post-meta">
-    <span class="badge ${category === 'off-chain' ? 'off-chain' : category === 'futures' ? 'futures' : 'spot'}">${typeLabel}</span>
     <span class="badge spot">$${coin.symbol}</span>
-    <span class="post-time">${new Date().toLocaleString('vi-VN')} — ID: ${postId}</span>
+    <button class="btn" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="copyText('${historyId}')">📋 Copy</button>
   </div>
-  <div class="post-body" style="max-height:100px;overflow:hidden;">${escHtml(content.substring(0,300))}${content.length>300?'...':''}</div>`;
+  <div class="post-body" id="${historyId}">${escHtml(content)}</div>`;
   el.prepend(item);
 }
 
@@ -975,13 +922,8 @@ function addLog(type, msg) {
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-function clearLog() {
-  document.getElementById('log-wrap').innerHTML = '';
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function clearLog() { document.getElementById('log-wrap').innerHTML = ''; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
@@ -993,28 +935,18 @@ function switchTab(name) {
   });
 }
 
-// ───────────────────────────────────────────
-//  COUNTDOWN
-// ───────────────────────────────────────────
 function startCountdown() {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   state.countdownTimer = setInterval(() => {
     if (!state.nextRun) return;
     const diff = state.nextRun - Date.now();
-    if (diff <= 0) {
-      document.getElementById('m-countdown').textContent = '00:00';
-      return;
-    }
+    if (diff <= 0) return;
     const m = Math.floor(diff / 60000).toString().padStart(2,'0');
     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
     document.getElementById('m-countdown').textContent = m + ':' + s;
-    document.getElementById('next-label').textContent = 'Đăng lúc ' + new Date(state.nextRun).toLocaleTimeString('vi-VN');
   }, 1000);
 }
 
-// ───────────────────────────────────────────
-//  BOT CONTROL
-// ───────────────────────────────────────────
 async function startBot() {
   state.running = true;
   document.getElementById('btn-start').disabled = true;
@@ -1037,42 +969,22 @@ async function startBot() {
   state.nextRun = Date.now() + intervalMs;
   startCountdown();
   document.getElementById('m-last').textContent = new Date().toLocaleTimeString('vi-VN');
-  document.getElementById('m-last-sub').textContent = 'lần quét gần nhất';
 }
 
 function stopBot() {
   state.running = false;
-  if (state.timer) clearInterval(state.timer);
-  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  clearInterval(state.timer);
+  clearInterval(state.countdownTimer);
   state.nextRun = null;
   document.getElementById('btn-start').disabled = false;
   document.getElementById('btn-stop').disabled = true;
   document.getElementById('status-pill').className = 'status-pill';
   document.getElementById('status-text').textContent = 'STOPPED';
-  document.getElementById('m-countdown').textContent = '—';
-  document.getElementById('next-label').textContent = '—';
   addLog('warn', 'Bot đã dừng.');
 }
 
-async function runOnce() {
-  addLog('info', 'Chạy thủ công 1 lần...');
-  await runCycle(true);
-  document.getElementById('m-last').textContent = new Date().toLocaleTimeString('vi-VN');
-}
-
-async function previewOnly() {
-  addLog('info', 'Preview mode (không đăng)...');
-  if (!state.marketData.length) await fetchMarket();
-  if (!state.marketData.length) { addLog('err', 'Không có dữ liệu'); return; }
-  const { coin, category } = pickCoinForPost();
-  try {
-    const content = await generatePost(coin, category);
-    showPreview(content, coin, category);
-    addLog('ok', `Preview xong: $${coin.symbol} [${category}]`);
-  } catch(e) {
-    addLog('err', e.message);
-  }
-}
+async function runOnce() { await runCycle(true); }
+async function previewOnly() { await runCycle(false); }
 </script>
 
 </body>
