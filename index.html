@@ -3,1525 +3,786 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Crypto Auto Post Tool</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<title>Crypto Auto Post Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0a0c0f;
-    --bg2: #111418;
-    --bg3: #181d23;
-    --bg4: #1e252e;
-    --border: #2a3340;
-    --border2: #3a4755;
-    --text: #e8edf2;
-    --text2: #8a9ab0;
-    --text3: #4a5a6e;
-    --accent: #f0b90b;
-    --accent2: #d4a00a;
-    --green: #0ecb81;
-    --red: #f6465d;
-    --blue: #1e88e5;
-    --purple: #7b61ff;
-    --teal: #00bcd4;
-    --orange: #ff9800;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
-
-  .topbar {
-    background: var(--bg2); border-bottom: 1px solid var(--border);
-    padding: 0 2rem; height: 56px; display: flex; align-items: center;
-    justify-content: space-between; position: sticky; top: 0; z-index: 100;
-  }
-  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 600; font-size: 15px; letter-spacing: 0.03em; }
-  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-  .status-pill { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--text2); background: var(--bg3); cursor: default; transition: all 0.3s; }
-  .status-pill.running { border-color: var(--green); color: var(--green); background: rgba(14,203,129,0.08); }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .status-pill.running .status-dot { animation: pulse 1.2s ease-in-out infinite; }
-
-  .container { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 56px); }
-  .sidebar { background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
-  .main { overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
-
-  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
-  .card-title { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-  .card-title span { color: var(--accent); }
-
-  label { font-size: 11px; color: var(--text2); font-weight: 500; letter-spacing: 0.04em; display: block; margin-bottom: 4px; margin-top: 10px; }
-  label:first-child { margin-top: 0; }
-  input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 12px; padding: 8px 10px; outline: none; transition: border-color 0.2s; }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  select option { background: var(--bg3); }
-  textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
-  .input-hint { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
-
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-  .toggle-label { font-size: 12px; color: var(--text2); }
-  .toggle { position: relative; width: 36px; height: 20px; cursor: pointer; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-track { position: absolute; inset: 0; background: var(--bg4); border: 1px solid var(--border2); border-radius: 10px; transition: all 0.25s; }
-  .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
-  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; background: var(--text2); border-radius: 50%; transition: all 0.25s; }
-  .toggle input:checked ~ .toggle-thumb { left: 19px; background: var(--bg); }
-
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-family: var(--mono); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-  .btn:hover { background: var(--bg4); border-color: var(--text3); }
-  .btn.accent { background: var(--accent); border-color: var(--accent2); color: #000; font-weight: 600; }
-  .btn.accent:hover { background: var(--accent2); }
-  .btn.red { background: rgba(246,70,93,0.1); border-color: var(--red); color: var(--red); }
-  .btn.red:hover { background: rgba(246,70,93,0.18); }
-  .btn.green { background: rgba(14,203,129,0.1); border-color: var(--green); color: var(--green); }
-  .btn.green:hover { background: rgba(14,203,129,0.18); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .metric { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
-  .metric-label { font-size: 10px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
-  .metric-val { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--text); }
-  .metric-val.green { color: var(--green); }
-  .metric-val.red { color: var(--red); }
-  .metric-val.yellow { color: var(--accent); }
-  .metric-sub { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
-
-  .market-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
-  .market-table th { text-align: left; color: var(--text3); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-  .market-table td { padding: 7px 8px; border-bottom: 1px solid var(--bg3); vertical-align: top; }
-  .market-table tr:last-child td { border: none; }
-  .market-table tr:hover td { background: var(--bg3); }
-  .coin-name { font-weight: 600; color: var(--text); }
-  .coin-tag { font-size: 10px; color: var(--text3); }
-  .up { color: var(--green); }
-  .down { color: var(--red); }
-  .badge { display: inline-block; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; }
-  .badge.spot { background: rgba(30,136,229,0.15); color: #64b5f6; border: 1px solid rgba(30,136,229,0.3); }
-  .badge.futures { background: rgba(123,97,255,0.15); color: #b39ddb; border: 1px solid rgba(123,97,255,0.3); }
-  .badge.off-chain { background: rgba(240,185,11,0.1); color: var(--accent); border: 1px solid rgba(240,185,11,0.3); }
-  .badge.drama { background: rgba(246,70,93,0.12); color: #ff8a95; border: 1px solid rgba(246,70,93,0.3); }
-  .badge.airdrop { background: rgba(0,188,212,0.12); color: var(--teal); border: 1px solid rgba(0,188,212,0.3); }
-  .badge.pre-listing { background: rgba(255,152,0,0.12); color: var(--orange); border: 1px solid rgba(255,152,0,0.3); }
-  .badge.trend { background: rgba(14,203,129,0.12); color: var(--green); border: 1px solid rgba(14,203,129,0.3); }
-  .badge.narrative { background: rgba(123,97,255,0.12); color: var(--purple); border: 1px solid rgba(123,97,255,0.3); }
-
-  .log-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; max-height: 260px; overflow-y: auto; font-family: var(--mono); font-size: 11px; line-height: 1.8; }
-  .log-line { display: flex; gap: 10px; }
-  .log-ts { color: var(--text3); min-width: 75px; }
-  .log-ok { color: var(--green); }
-  .log-err { color: var(--red); }
-  .log-info { color: #64b5f6; }
-  .log-warn { color: var(--accent); }
-
-  .post-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; position: relative; overflow: hidden; }
-  .post-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 2px 0 0 2px; }
-  .post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-  .post-type { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-  .post-time { font-family: var(--mono); font-size: 10px; color: var(--text3); }
-  .post-body { font-size: 13px; line-height: 1.75; color: var(--text); white-space: pre-wrap; }
-
-  .progress-bar { background: var(--bg4); border-radius: 4px; height: 4px; overflow: hidden; margin: 6px 0; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s ease; }
-
-  .schedule-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--bg3); font-family: var(--mono); font-size: 11px; }
-  .schedule-row:last-child { border: none; }
-  .sched-label { color: var(--text2); }
-  .sched-val { color: var(--accent); font-weight: 500; }
-  .countdown { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
-
-  .spin { display: inline-block; animation: rotate 0.8s linear infinite; }
-  @keyframes rotate { to { transform: rotate(360deg); } }
-  .sep { height: 1px; background: var(--border); margin: 4px 0; }
-
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
-  .tab { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
-  .tab:hover { color: var(--text2); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  .ratio-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; margin: 6px 0; }
-  .ratio-seg { height: 100%; border-radius: 2px; transition: width 0.5s; }
-
-  /* TREND CARDS */
-  .trend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .trend-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; }
-  .trend-card:hover { border-color: var(--accent); background: var(--bg4); }
-  .trend-card.selected { border-color: var(--accent); background: rgba(240,185,11,0.05); }
-  .trend-title { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .trend-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
-  .trend-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-
-  /* NARRATIVE PANEL */
-  .narrative-list { display: flex; flex-direction: column; gap: 8px; }
-  .narrative-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: all 0.15s; }
-  .narrative-item:hover { border-color: var(--accent); }
-  .narrative-item.selected { border-color: var(--accent); background: rgba(240,185,11,0.05); }
-  .narrative-icon { font-size: 18px; flex-shrink: 0; }
-  .narrative-info { flex: 1; }
-  .narrative-name { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); }
-  .narrative-coins { font-size: 10px; color: var(--accent); margin-top: 2px; font-family: var(--mono); }
-  .narrative-desc { font-size: 10px; color: var(--text2); margin-top: 3px; }
-
-  /* SOURCE PANEL */
-  .source-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .source-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
-  .source-name { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text); }
-  .source-status { font-size: 10px; margin-top: 2px; }
-  .source-ok { color: var(--green); }
-  .source-warn { color: var(--accent); }
-
-  /* PRE-LISTING */
-  .prelisting-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-  .prelisting-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .prelisting-name { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
-  .prelisting-meta { font-size: 10px; color: var(--text2); line-height: 1.6; }
-  .signal-bar { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-
-  /* COPY BUTTON */
-  .copy-btn { font-size: 10px; padding: 3px 8px; margin-left: 8px; }
-
-  /* PROMPT EDITOR */
-  .prompt-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-  .prompt-section-title { font-family: var(--mono); font-size: 10px; color: var(--accent); font-weight: 600; letter-spacing: 0.1em; margin-bottom: 8px; }
-
-  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--bg4); outline: none; margin: 4px 0; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer; }
-
-  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; cursor: pointer; }
-  .checkbox-row input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
-  .checkbox-label { font-size: 12px; color: var(--text2); }
+:root{--bg:#0a0c0f;--bg2:#111418;--bg3:#181d23;--bg4:#1e252e;--border:#2a3340;--border2:#3a4755;--text:#e8edf2;--text2:#8a9ab0;--text3:#4a5a6e;--accent:#f0b90b;--accent2:#d4a00a;--green:#0ecb81;--red:#f6465d;--blue:#1e88e5;--purple:#7b61ff;--orange:#ff8c00;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.03em;}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.status-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text2);background:var(--bg3);transition:all .3s;}
+.status-pill.running{border-color:var(--green);color:var(--green);background:rgba(14,203,129,.08);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.status-pill.running .status-dot{animation:pulse 1.2s ease-in-out infinite;}
+.container{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 56px);}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1.25rem;}
+.main{overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
+.card-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+label{font-size:11px;color:var(--text2);font-weight:500;letter-spacing:.04em;display:block;margin-bottom:4px;margin-top:10px;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:60px;line-height:1.6;}
+.input-hint{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+.tr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--bg4);border-color:var(--text3);}
+.btn.accent{background:var(--accent);border-color:var(--accent2);color:#000;font-weight:600;}
+.btn.accent:hover{background:var(--accent2);}
+.btn.red{background:rgba(246,70,93,.1);border-color:var(--red);color:var(--red);}
+.btn.green{background:rgba(14,203,129,.1);border-color:var(--green);color:var(--green);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;}
+.metric-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.metric-val{font-size:22px;font-weight:600;font-family:var(--mono);}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono);}
+.mkt-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.mkt-table th{text-align:left;color:var(--text3);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);}
+.mkt-table td{padding:7px 8px;border-bottom:1px solid var(--bg3);}
+.mkt-table tr:last-child td{border:none;}
+.mkt-table tr:hover td{background:var(--bg3);}
+.cn{font-weight:600;color:var(--text);}
+.ct{font-size:10px;color:var(--text3);}
+.up{color:var(--green);}.down{color:var(--red);}
+.badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:.05em;}
+.badge.spot{background:rgba(30,136,229,.15);color:#64b5f6;border:1px solid rgba(30,136,229,.3);}
+.badge.futures{background:rgba(123,97,255,.15);color:#b39ddb;border:1px solid rgba(123,97,255,.3);}
+.badge.off{background:rgba(240,185,11,.1);color:var(--accent);border:1px solid rgba(240,185,11,.3);}
+.badge.drama{background:rgba(246,70,93,.12);color:#ff8a95;border:1px solid rgba(246,70,93,.3);}
+.badge.air{background:rgba(14,203,129,.12);color:var(--green);border:1px solid rgba(14,203,129,.3);}
+.badge.narr{background:rgba(123,97,255,.12);color:#b39ddb;border:1px solid rgba(123,97,255,.3);}
+.badge.gem{background:rgba(255,140,0,.15);color:var(--orange);border:1px solid rgba(255,140,0,.4);}
+.badge.hot{background:rgba(246,70,93,.15);color:#ff8a95;border:1px solid rgba(246,70,93,.4);}
+.log-wrap{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;max-height:300px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.8;}
+.log-line{display:flex;gap:10px;}
+.log-ts{color:var(--text3);min-width:75px;}
+.log-ok{color:var(--green);}.log-err{color:var(--red);}.log-info{color:#64b5f6;}.log-warn{color:var(--accent);}
+.post-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;position:relative;overflow:hidden;margin-bottom:10px;}
+.post-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+.post-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.post-body{font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;}
+.countdown{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);}
+.spin{display:inline-block;animation:rotate .8s linear infinite;}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.sep{height:1px;background:var(--border);margin:8px 0;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+.tab{padding:8px 13px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:var(--text2);}.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+.ratio-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:6px 0;}
+.ratio-seg{height:100%;border-radius:2px;transition:width .4s;}
+.db{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+.db-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.db-body{font-size:12px;color:var(--text2);line-height:1.7;}
+.tag-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.chip{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);}
+.chip.on{background:rgba(240,185,11,.08);border-color:rgba(240,185,11,.4);color:var(--accent);}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:2px;outline:none;margin:4px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,15,.9);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.overlay.show{display:flex;}
+.ov-spin{font-size:36px;animation:rotate 1s linear infinite;color:var(--accent);}
+.ov-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.06em;}
+.ov-step{font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;max-width:400px;line-height:2;}
+.pbar{width:320px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .6s ease;}
 </style>
 </head>
 <body>
 
+<div class="overlay" id="ov">
+  <div class="ov-spin">⟳</div>
+  <div class="ov-title" id="ov-title">ĐANG QUÉT</div>
+  <div class="pbar"><div class="pfill" id="ov-pfill" style="width:0%"></div></div>
+  <div class="ov-step" id="ov-step">Khởi động...</div>
+</div>
+
 <div class="topbar">
-  <div class="logo">
-    <div class="logo-dot"></div>
-    CRYPTO AUTO POST TOOL
-  </div>
+  <div class="logo"><div class="logo-dot"></div>CRYPTO AUTO POST PRO</div>
   <div style="display:flex;align-items:center;gap:12px;">
-    <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="next-label">—</span>
-    <div class="status-pill" id="status-pill">
-      <div class="status-dot"></div>
-      <span id="status-text">STOPPED</span>
-    </div>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text3);" id="next-label">—</span>
+    <div class="status-pill" id="spill"><div class="status-dot"></div><span id="stext">STOPPED</span></div>
   </div>
 </div>
 
 <div class="container">
+<div class="sidebar">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="card">
+    <div class="card-title">⚙ Config</div>
+    <label>OpenAI API Key <span style="color:var(--red)">*</span></label>
+    <input type="password" id="oai-key" placeholder="sk-..." autocomplete="off"/>
+    <div class="input-hint">Dùng cho generate bài + web search real-time data</div>
+    <div class="sep"></div>
+    <label>Platform</label>
+    <select id="platform" onchange="switchPlat()">
+      <option value="preview">Preview Only</option>
+      <option value="telegram">Telegram Channel</option>
+      <option value="binance">Binance Square</option>
+    </select>
+    <div id="tg-f" style="display:none">
+      <label>Bot Token</label><input type="password" id="tg-tok" placeholder="123456:ABC..."/>
+      <label>Channel ID</label><input type="text" id="tg-ch" placeholder="@channel"/>
+    </div>
+    <div id="bn-f" style="display:none">
+      <label>Binance API Key</label><input type="password" id="bn-key" placeholder="API key..."/>
+      <label>Binance Secret</label><input type="password" id="bn-sec" placeholder="Secret..."/>
+      <div class="input-hint">⚠ Cần backend HMAC để đăng thật</div>
+    </div>
+  </div>
 
-    <div class="card">
-      <div class="card-title">⚙ API Config</div>
-      <label>OpenAI API Key</label>
-      <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off"/>
-      <div class="input-hint">Dùng GPT-4o để tạo bài chất lượng cao</div>
-      <label>Binance API Key (tùy chọn)</label>
-      <input type="password" id="binance-key" placeholder="Binance API key..." autocomplete="off"/>
-      <label>Binance Secret (tùy chọn)</label>
-      <input type="password" id="binance-secret" placeholder="Binance secret..." autocomplete="off"/>
+  <div class="card">
+    <div class="card-title">⏱ Schedule</div>
+    <label>Interval (phút)</label>
+    <input type="number" id="interval" value="30" min="5" max="1440"/>
+    <div class="sep"></div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;margin-bottom:8px;">TỈ LỆ NỘI DUNG</div>
+    <div class="tr"><span style="font-size:11px;color:var(--text2);">Spot drama</span><span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="p-spot">20%</span></div>
+    <input type="range" id="r-spot" min="0" max="60" value="20"/>
+    <div class="tr"><span style="font-size:11px;color:var(--text2);">Futures/Perp</span><span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="p-fut">15%</span></div>
+    <input type="range" id="r-fut" min="0" max="60" value="15"/>
+    <div class="tr"><span style="font-size:11px;color:var(--text2);">Narrative/Sector</span><span style="font-family:var(--mono);font-size:11px;color:#9c27b0" id="p-narr">25%</span></div>
+    <input type="range" id="r-narr" min="0" max="60" value="25"/>
+    <div class="tr"><span style="font-size:11px;color:var(--text2);">Airdrop/Pre-listing</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="p-air">20%</span></div>
+    <input type="range" id="r-air" min="0" max="50" value="20"/>
+    <div class="tr"><span style="font-size:11px;color:var(--text2);">Off-chain/Non-listed</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="p-off">20%</span></div>
+    <div class="ratio-bar">
+      <div class="ratio-seg" id="rs-s" style="background:var(--blue);width:20%"></div>
+      <div class="ratio-seg" id="rs-f" style="background:var(--purple);width:15%"></div>
+      <div class="ratio-seg" id="rs-n" style="background:#9c27b0;width:25%"></div>
+      <div class="ratio-seg" id="rs-a" style="background:var(--green);width:20%"></div>
+      <div class="ratio-seg" id="rs-o" style="background:var(--accent);width:20%"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✍ Post Settings</div>
+    <label>Ngôn ngữ</label>
+    <select id="lang"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="bilingual">Song ngữ VI/EN</option></select>
+    <label>Độ dài</label>
+    <select id="plen"><option value="short">Ngắn ~150 từ</option><option value="medium" selected>Vừa ~300 từ</option><option value="long">Dài ~500 từ</option></select>
+    <label>Tone</label>
+    <select id="tone">
+      <option value="drama" selected>Drama / FOMO</option>
+      <option value="analytical">Phân tích chuyên sâu</option>
+      <option value="educational">Giáo dục / Tutorial</option>
+      <option value="alpha">Alpha / Insider</option>
+      <option value="thread">Thread 1/n style</option>
+      <option value="degen">Degen CT style</option>
+    </select>
+    <label style="margin-top:10px;">Bổ sung</label>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;">
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-oc" checked style="width:auto"> On-chain signals</label>
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-sent" checked style="width:auto"> Market sentiment</label>
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-ta" checked style="width:auto"> Technical hints</label>
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-mac" style="width:auto"> Macro context</label>
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-risk" checked style="width:auto"> Risk disclaimer</label>
+    </div>
+    <label style="margin-top:10px;">Custom instructions</label>
+    <textarea id="custom" placeholder="VD: Luôn đề cập risk/reward..."></textarea>
+    <label>Blacklist coins</label>
+    <input type="text" id="blist" placeholder="LUNA, FTT, SQUID..."/>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎮 Control</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <button class="btn accent" id="btn-start" onclick="startBot()">▶ Start</button>
+      <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Stop</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <button class="btn" style="width:100%" onclick="runOnce()">↻ Chạy 1 lần</button>
+      <button class="btn" style="width:100%" onclick="previewOnly()">👁 Preview (không đăng)</button>
+      <button class="btn green" style="width:100%" onclick="fullScan()">🔍 Full scan thị trường</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="main">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Bài đã đăng</div><div class="metric-val" style="color:var(--accent)" id="m-post">0</div><div class="metric-sub">tổng cộng</div></div>
+    <div class="metric"><div class="metric-label">Coins scanned</div><div class="metric-val" style="color:var(--green)" id="m-coins">0</div><div class="metric-sub">real-time</div></div>
+    <div class="metric"><div class="metric-label">Last AI scan</div><div class="metric-val" id="m-scan" style="font-size:14px;color:var(--text2)">—</div><div class="metric-sub">web search</div></div>
+    <div class="metric"><div class="metric-label">Đăng tiếp theo</div><div class="countdown" id="m-cd">—</div><div class="metric-sub">mm:ss</div></div>
+  </div>
+
+  <div class="card" style="padding:1.25rem">
+    <div class="tabs">
+      <div class="tab active" onclick="st('market')">📈 Market</div>
+      <div class="tab" onclick="st('intel')">🧠 AI Intel</div>
+      <div class="tab" onclick="st('narratives')">🔥 Narratives</div>
+      <div class="tab" onclick="st('airdrops')">🪂 Airdrops</div>
+      <div class="tab" onclick="st('preview')">📝 Preview</div>
+      <div class="tab" onclick="st('log')">🖥 Log</div>
+      <div class="tab" onclick="st('history')">📚 History</div>
     </div>
 
-    <div class="card">
-      <div class="card-title">⏱ Schedule</div>
-      <label>Interval (phút)</label>
-      <input type="number" id="interval" value="30" min="5" max="1440"/>
-      <div class="sep" style="margin:12px 0;"></div>
-      <div class="card-title" style="margin-bottom:8px;">📊 Tỉ lệ nội dung</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Spot / On-chain drama</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="pct-spot">30%</span>
+    <!-- MARKET -->
+    <div class="tab-panel active" id="tab-market">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)" id="mkt-ts">Chưa quét</span>
+        <button class="btn" onclick="fetchMkt()" id="btn-mkt"><span id="mkt-ic">⟳</span> Quét giá real-time</button>
       </div>
-      <input type="range" id="pct-spot-range" min="0" max="70" value="30" style="width:100%;margin-bottom:6px;"/>
-      <div class="toggle-row">
-        <span class="toggle-label">Futures / Derivatives</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="pct-futures">25%</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn" onclick="flt('all')" style="font-size:11px;padding:4px 10px">Tất cả</button>
+        <button class="btn" onclick="flt('drama')" style="font-size:11px;padding:4px 10px">🔥 Drama</button>
+        <button class="btn" onclick="flt('futures')" style="font-size:11px;padding:4px 10px">Futures</button>
+        <button class="btn" onclick="flt('off')" style="font-size:11px;padding:4px 10px">Off-chain</button>
+        <button class="btn" onclick="flt('gem')" style="font-size:11px;padding:4px 10px">💎 Gem</button>
       </div>
-      <input type="range" id="pct-futures-range" min="0" max="70" value="25" style="width:100%;margin-bottom:6px;"/>
-      <div class="toggle-row">
-        <span class="toggle-label">Narrative / Trend mới</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="pct-trend">25%</span>
+      <div style="overflow-x:auto">
+        <table class="mkt-table">
+          <thead><tr><th>Coin</th><th>Type</th><th>Giá</th><th>24h</th><th>Volume</th><th>Narrative</th><th>Signal</th></tr></thead>
+          <tbody id="mkt-body"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Nhấn "Quét giá" hoặc "Full scan"</td></tr></tbody>
+        </table>
       </div>
-      <input type="range" id="pct-trend-range" min="0" max="70" value="25" style="width:100%;margin-bottom:6px;"/>
-      <div class="toggle-row">
-        <span class="toggle-label">Airdrop / Pre-listing</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--teal)" id="pct-airdrop">20%</span>
-      </div>
-      <div class="ratio-bar">
-        <div class="ratio-seg" id="rs-spot" style="background:var(--blue);width:30%"></div>
-        <div class="ratio-seg" id="rs-fut" style="background:var(--purple);width:25%"></div>
-        <div class="ratio-seg" id="rs-trend" style="background:var(--green);width:25%"></div>
-        <div class="ratio-seg" id="rs-air" style="background:var(--teal);width:20%"></div>
-      </div>
-      <div class="input-hint">Tổng = 100%</div>
     </div>
 
-    <div class="card">
-      <div class="card-title">✍ Post Settings</div>
-      <label>Ngôn ngữ</label>
-      <select id="lang">
-        <option value="vi">Tiếng Việt</option>
-        <option value="en">English</option>
-        <option value="bilingual">Song ngữ VI/EN</option>
-      </select>
-      <label>Độ dài bài</label>
-      <select id="post-length">
-        <option value="short">Ngắn (~150 từ)</option>
-        <option value="medium" selected>Trung bình (~300 từ)</option>
-        <option value="long">Chi tiết (~500 từ)</option>
-      </select>
-      <label>Tone viết</label>
-      <select id="tone">
-        <option value="analytical">Phân tích chuyên sâu</option>
-        <option value="drama" selected>Drama / Hấp dẫn</option>
-        <option value="educational">Giáo dục / Giải thích</option>
-        <option value="alpha">Alpha / Insider tips</option>
-        <option value="degen">Degen / Crypto native</option>
-      </select>
-
-      <div class="sep" style="margin:10px 0;"></div>
-      <div class="card-title" style="margin-bottom:8px;">🔧 Tùy chỉnh Prompt</div>
-
-      <label class="checkbox-row" style="margin-top:0;">
-        <input type="checkbox" id="opt-no-financial-advice" checked/>
-        <span class="checkbox-label">Thêm disclaimer "not financial advice"</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="opt-include-data" checked/>
-        <span class="checkbox-label">Luôn đề cập dữ liệu thị trường</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="opt-call-to-action" checked/>
-        <span class="checkbox-label">Thêm call-to-action / câu hỏi cuối</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="opt-risk-mgmt"/>
-        <span class="checkbox-label">Đề cập risk management</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="opt-on-chain" checked/>
-        <span class="checkbox-label">Bao gồm tín hiệu on-chain</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="opt-no-exchange-tag" checked/>
-        <span class="checkbox-label">Không tag tên sàn</span>
-      </label>
-
-      <label>Custom Prompt thêm (tùy chọn)</label>
-      <textarea id="custom-prompt" placeholder="VD: Luôn so sánh với chu kỳ 2021..."></textarea>
+    <!-- AI INTEL -->
+    <div class="tab-panel" id="tab-intel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">AI WEB SEARCH INTEL — 100% REAL-TIME</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI search web để lấy funding rates, whale moves, drama signals ngay lúc này</div>
+        </div>
+        <button class="btn" onclick="fetchIntel()" id="btn-intel"><span id="intel-ic">⟳</span> Scan ngay</button>
+      </div>
+      <div class="db"><div class="db-title">📊 Funding Rates &amp; Open Interest <span class="badge narr" style="font-size:8px" id="fund-ts">—</span></div><div class="db-body" id="fund-body">Chưa có — nhấn Scan ngay</div></div>
+      <div class="db"><div class="db-title">🐋 Whale Moves &amp; On-chain Activity <span class="badge narr" style="font-size:8px" id="whale-ts">—</span></div><div class="db-body" id="whale-body">Chưa có</div></div>
+      <div class="db"><div class="db-title">⚡ Drama Signals &amp; Breaking News <span class="badge hot" style="font-size:8px" id="drama-ts">—</span></div><div class="db-body" id="drama-body">Chưa có</div><div class="tag-row" id="drama-tags"></div></div>
+      <div class="db"><div class="db-title">📋 Futures Coins List (AI-updated) <span class="badge gem" style="font-size:8px" id="fut-ts">—</span></div><div class="tag-row" id="fut-tags"><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Chưa fetch</span></div></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">🎮 Control</div>
-      <div class="btn-group">
-        <button class="btn accent" id="btn-start" onclick="startBot()">▶ Start Bot</button>
-        <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Stop</button>
+    <!-- NARRATIVES -->
+    <div class="tab-panel" id="tab-narratives">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">NARRATIVE RADAR — AI FETCHED REAL-TIME</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm narrative đang trending trên CT/Reddit/Discord hôm nay</div>
+        </div>
+        <button class="btn" onclick="fetchNarr()" id="btn-narr"><span id="narr-ic">⟳</span> Fetch narratives</button>
       </div>
-      <div style="margin-top:8px; display:flex; gap:8px;">
-        <button class="btn" style="flex:1;" onclick="runOnce()">↻ Chạy 1 lần</button>
-        <button class="btn" style="flex:1;" onclick="previewOnly()">👁 Preview</button>
+      <div id="narr-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm narrative đang hot</div></div>
+    </div>
+
+    <!-- AIRDROPS -->
+    <div class="tab-panel" id="tab-airdrops">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">AIRDROP &amp; PRE-LISTING RADAR — AI FETCHED</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm các dự án pre-listing, airdrop active hôm nay</div>
+        </div>
+        <button class="btn" onclick="fetchAir()" id="btn-air"><span id="air-ic">⟳</span> Fetch airdrops</button>
       </div>
-      <div style="margin-top:8px;">
-        <button class="btn" style="width:100%;color:var(--teal);border-color:rgba(0,188,212,0.3);" onclick="scanAllSources()">🔍 Quét tất cả nguồn</button>
-      </div>
+      <div id="air-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm airdrop đang hot</div></div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="tab-panel" id="tab-preview">
+      <div id="prev-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Preview hoặc chờ bot tạo bài</div>
+      <div id="prev-content" style="display:none"></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="tab-panel" id="tab-log">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn" onclick="document.getElementById('log-w').innerHTML=''" style="font-size:11px;padding:4px 10px">✕ Clear</button></div>
+      <div class="log-wrap" id="log-w"><div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Crypto Auto Post Pro v2 — 100% real-time qua AI web search. Nhập OpenAI key để bắt đầu.</span></div></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="tab-panel" id="tab-history">
+      <div id="hist-list"><div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Chưa có bài nào</div></div>
     </div>
 
   </div>
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <!-- METRICS -->
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-label">Bài đã đăng</div>
-        <div class="metric-val yellow" id="m-posted">0</div>
-        <div class="metric-sub">tổng cộng</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Coins scanned</div>
-        <div class="metric-val green" id="m-coins">0</div>
-        <div class="metric-sub" id="m-coins-sub">đang chờ</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Trends phát hiện</div>
-        <div class="metric-val" id="m-trends" style="color:var(--teal)">0</div>
-        <div class="metric-sub">narratives + signals</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Đăng tiếp theo</div>
-        <div class="countdown" id="m-countdown">—</div>
-        <div class="metric-sub">hh:mm:ss</div>
-      </div>
-    </div>
-
-    <!-- TABS -->
-    <div class="card" style="padding:1.25rem;">
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab('market')">📈 Market</div>
-        <div class="tab" onclick="switchTab('trends')">🔥 Trends & Narratives</div>
-        <div class="tab" onclick="switchTab('prelisting')">🚀 Pre-listing</div>
-        <div class="tab" onclick="switchTab('sources')">🌐 Nguồn dữ liệu</div>
-        <div class="tab" onclick="switchTab('preview')">📝 Preview</div>
-        <div class="tab" onclick="switchTab('log')">🖥 Log</div>
-        <div class="tab" onclick="switchTab('history')">📚 History</div>
-      </div>
-
-      <!-- TAB: MARKET -->
-      <div class="tab-panel active" id="tab-market">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="market-update-time">Chưa quét</span>
-          <button class="btn" onclick="fetchMarket()" id="btn-fetch">
-            <span id="fetch-icon">⟳</span> Quét thị trường
-          </button>
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-          <button class="btn" onclick="filterMarket('all')" style="font-size:11px;padding:4px 10px;">Tất cả</button>
-          <button class="btn" onclick="filterMarket('spot')" style="font-size:11px;padding:4px 10px;">Spot</button>
-          <button class="btn" onclick="filterMarket('futures')" style="font-size:11px;padding:4px 10px;">Futures</button>
-          <button class="btn" onclick="filterMarket('drama')" style="font-size:11px;padding:4px 10px;">🔥 Drama</button>
-          <button class="btn" onclick="filterMarket('gainer')" style="font-size:11px;padding:4px 10px;">📈 Top Gainer</button>
-          <button class="btn" onclick="filterMarket('loser')" style="font-size:11px;padding:4px 10px;">📉 Top Loser</button>
-          <button class="btn" onclick="filterMarket('defi')" style="font-size:11px;padding:4px 10px;">🏦 DeFi</button>
-          <button class="btn" onclick="filterMarket('ai')" style="font-size:11px;padding:4px 10px;">🤖 AI coins</button>
-          <button class="btn" onclick="filterMarket('l2')" style="font-size:11px;padding:4px 10px;">⚡ L2</button>
-          <button class="btn" onclick="filterMarket('meme')" style="font-size:11px;padding:4px 10px;">🐸 Meme</button>
-        </div>
-        <div id="market-table-wrap" style="overflow-x:auto;">
-          <table class="market-table">
-            <thead><tr>
-              <th>Coin</th><th>Loại</th><th>Giá</th><th>24h %</th><th>7d %</th><th>Volume</th><th>Signal</th>
-            </tr></thead>
-            <tbody id="market-tbody">
-              <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono);font-size:12px;">Nhấn "Quét thị trường" để tải dữ liệu</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB: TRENDS & NARRATIVES -->
-      <div class="tab-panel" id="tab-trends">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <span style="font-size:11px;color:var(--text2);font-family:var(--mono);">Chọn narrative để tạo bài viết tập trung</span>
-          <button class="btn" onclick="refreshNarratives()" style="font-size:11px;">↻ Refresh</button>
-        </div>
-
-        <div class="trend-grid" id="trend-grid">
-          <!-- populated by JS -->
-        </div>
-
-        <div class="sep" style="margin:16px 0;"></div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase;">📡 Narratives đang hot</div>
-        <div class="narrative-list" id="narrative-list">
-          <!-- populated by JS -->
-        </div>
-      </div>
-
-      <!-- TAB: PRE-LISTING -->
-      <div class="tab-panel" id="tab-prelisting">
-        <div style="margin-bottom:12px;">
-          <span style="font-size:11px;color:var(--text2);font-family:var(--mono);">Dự án pre-listing, sắp niêm yết, hoặc có tiềm năng nhưng chưa mainstream</span>
-        </div>
-        <div id="prelisting-list"><!-- populated by JS --></div>
-      </div>
-
-      <!-- TAB: SOURCES -->
-      <div class="tab-panel" id="tab-sources">
-        <div style="margin-bottom:12px;">
-          <span style="font-size:11px;color:var(--text2);font-family:var(--mono);">Các nguồn dữ liệu được tổng hợp để phân tích</span>
-        </div>
-        <div class="source-grid" id="source-grid"><!-- populated by JS --></div>
-        <div class="sep" style="margin:16px 0;"></div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em;">📊 Data Feed Log</div>
-        <div class="log-wrap" id="source-log" style="max-height:160px;">
-          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Nguồn dữ liệu sẵn sàng. Nhấn "Quét tất cả nguồn" để bắt đầu.</span></div>
-        </div>
-      </div>
-
-      <!-- TAB: PREVIEW -->
-      <div class="tab-panel" id="tab-preview">
-        <div id="preview-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px;">
-          Nhấn "Preview" hoặc chờ bot chạy để xem bài viết
-        </div>
-        <div id="preview-content" style="display:none;"></div>
-      </div>
-
-      <!-- TAB: LOG -->
-      <div class="tab-panel" id="tab-log">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-          <button class="btn" onclick="clearLog()" style="font-size:11px;padding:4px 10px;">✕ Clear</button>
-        </div>
-        <div class="log-wrap" id="log-wrap">
-          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Hệ thống khởi động. Nhập API key và nhấn Start.</span></div>
-        </div>
-      </div>
-
-      <!-- TAB: HISTORY -->
-      <div class="tab-panel" id="tab-history">
-        <div id="history-list">
-          <div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px;">Chưa có bài viết nào</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+</div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
-const state = {
-  running: false,
-  timer: null,
-  countdownTimer: null,
-  nextRun: null,
-  posted: 0,
-  marketData: [],
-  marketFilter: 'all',
-  selectedNarrative: null,
-  selectedTrend: null,
-  prelistingData: [],
-  trendCount: 0,
-};
+// ═══════ STATE ═══════
+const S={running:false,timer:null,cdt:null,nextRun:null,posted:0,coins:[],cf:'all',
+  intel:{funding:'',whale:'',drama:'',dramaCoins:[],futuresList:[]},
+  narratives:[],airdrops:[]};
 
-// ═══════════════════════════════════════════
-//  COIN CATEGORIES
-// ═══════════════════════════════════════════
-const COIN_CATEGORIES = {
-  defi: ['UNI','AAVE','COMP','MKR','CRV','BAL','YFI','SUSHI','1INCH','DYDX','GMX','PERP','SNX','LDO','RPL','FXS','FRAX','CVX','ANKR','SSV'],
-  ai: ['FET','AGIX','OCEAN','NMR','GRT','RNDR','AKT','TAO','WLD','CTXC','DBC','ALI','PAAL','AIOZ','NTRN'],
-  l2: ['OP','ARB','MATIC','IMX','METIS','BOBA','ZKS','STRK','MANTA','ALT','ZKEVM','SCROLL','BASE','BLAST'],
-  meme: ['DOGE','SHIB','PEPE','FLOKI','BONK','WIF','BOME','SLERF','MEW','TURBO','BRETT','NEIRO','POPCAT','MOODENG'],
-  rwa: ['ONDO','POLYX','TKN','MPL','CPOOL','RIO','PAXG','LQTY'],
-  gaming: ['AXS','SAND','MANA','ENJ','GALA','ILV','BEAM','RON','PRIME','TLM','SLP'],
-  l1: ['SOL','AVAX','NEAR','FTM','ONE','ALGO','EGLD','TON','SUI','APT','SEI','INJ','TIA','CELESTIA'],
-};
+// ═══════ HELPERS ═══════
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const ts=()=>new Date().toLocaleTimeString('vi-VN');
+const fmtP=p=>{if(!p)return'0';if(p>1000)return p.toLocaleString('en-US',{maximumFractionDigits:0});if(p>1)return p.toFixed(2);return p.toFixed(6);};
+const fmtV=v=>{if(!v)return'0';if(v>1e9)return(v/1e9).toFixed(2)+'B';if(v>1e6)return(v/1e6).toFixed(1)+'M';if(v>1e3)return(v/1e3).toFixed(0)+'K';return String(v);};
 
-// ═══════════════════════════════════════════
-//  NARRATIVES DATABASE
-// ═══════════════════════════════════════════
-const NARRATIVES = [
-  {
-    id: 'ai-agents', icon: '🤖', name: 'AI Agents & DePIN',
-    desc: 'Làn sóng AI agents on-chain đang bùng nổ. Các dự án kết hợp AI với blockchain đang nhận vốn đầu tư khổng lồ.',
-    coins: ['FET','AGIX','TAO','RNDR','WLD','AKT','GRT','OCEAN'],
-    trend: 'bullish', momentum: 92,
-    keyInsight: 'AI coins outperformed BTC 3x trong Q1 2024. DePIN sector market cap vượt $10B.',
-    contexts: ['Agent frameworks như Auto-GPT đang được on-chain hóa','Inference market đang xuất hiện với Akash, io.net','TAO (Bittensor) là L1 AI được VC rót vốn nhiều nhất']
-  },
-  {
-    id: 'btc-l2', icon: '₿', name: 'Bitcoin L2 & Runes',
-    desc: 'Ecosystem Bitcoin L2 đang bùng nổ với Runes Protocol, Ordinals, và các giải pháp scaling mới.',
-    coins: ['STX','ORDI','SATS','RATS','NALS'],
-    trend: 'bullish', momentum: 88,
-    keyInsight: 'Bitcoin L2 TVL tăng 400% YTD. Runes Protocol ra mắt sau halving tạo fee spike kỷ lục.',
-    contexts: ['Halving effect + Runes tạo demand fee cực lớn','STX (Stacks) là L2 BTC mature nhất với sBTC','Ordinals NFT market vẫn active với $500M+ volume']
-  },
-  {
-    id: 'restaking', icon: '🔄', name: 'Restaking & EigenLayer',
-    desc: 'EigenLayer và restaking narrative đang reshape DeFi. AVS ecosystem bùng nổ.',
-    coins: ['EIGEN','LDO','RPL','ANKR','SSV','SWELL','METH'],
-    trend: 'bullish', momentum: 85,
-    keyInsight: 'EigenLayer TVL vượt $15B, trở thành protocol lớn thứ 2 DeFi sau Lido.',
-    contexts: ['Restaking tạo ra "yield stacking" - kiếm nhiều lớp yield từ 1 ETH','AVS (Actively Validated Services) là nền tảng cho Dapps mới','LRT tokens (liquid restaking tokens) đang bùng nổ']
-  },
-  {
-    id: 'rwa', icon: '🏦', name: 'Real World Assets (RWA)',
-    desc: 'Tokenization tài sản thực đang được các tổ chức lớn như BlackRock, Fidelity đẩy mạnh.',
-    coins: ['ONDO','POLYX','MPL','CPOOL','RIO','PAXG'],
-    trend: 'bullish', momentum: 90,
-    keyInsight: 'BlackRock BUIDL fund vượt $500M. RWA on-chain tổng TVL chạm $8B.',
-    contexts: ['US Treasury tokenization đang là trend lớn nhất','ONDO Finance tiên phong với US Treasuries on-chain','Compliance layer là yếu tố then chốt cho adoption']
-  },
-  {
-    id: 'ton-ecosystem', icon: '💎', name: 'TON & Telegram Ecosystem',
-    desc: 'TON blockchain tích hợp với Telegram 900M users đang tạo adoption wave chưa từng có.',
-    coins: ['TON','DOGS','HAMSTR','NOTCOIN','STON','DEDUST'],
-    trend: 'bullish', momentum: 87,
-    keyInsight: 'Telegram mini-apps có 50M+ daily active users. TON DEX volume tăng 10x trong 3 tháng.',
-    contexts: ['Telegram bot ecosystem tạo onramp dễ nhất lịch sử crypto','Notcoin tap-to-earn chứng minh mô hình growth hack','TON có thể là Solana của Telegram ecosystem']
-  },
-  {
-    id: 'modular', icon: '⚡', name: 'Modular Blockchain',
-    desc: 'Kiến trúc modular (data availability, execution, settlement) đang là paradigm shift.',
-    coins: ['TIA','ALT','AVAIL','EIGEN','MANTA','DYMENSION','CELESTIA'],
-    trend: 'bullish', momentum: 80,
-    keyInsight: 'Celestia DA layer xử lý data cho 50+ rollups. Modular market cap vượt $5B.',
-    contexts: ['Celestia pioneered data availability layer','Dymension là hub cho IBC-connected rollups','Modular vs Monolithic debate đang định hình L1 wars']
-  },
-  {
-    id: 'solana-ecosystem', icon: '◎', name: 'Solana Meme & DeFi Revival',
-    desc: 'Solana ecosystem đang có "Solana Summer" thứ 2 với meme coins, DEX volume, và DeFi TVL tăng mạnh.',
-    coins: ['SOL','JTO','JUP','BONK','WIF','PYTH','RAY','MSOL'],
-    trend: 'bullish', momentum: 94,
-    keyInsight: 'Solana DEX volume vượt Ethereum L1. Jupiter DEX đạt $1B+ daily volume.',
-    contexts: ['Pump.fun tạo ra meme coin factory với revenue $50M+','Solana phone Saga 2 sold out instant','JupSOL và liquid staking ecosystem đang mature']
-  },
-  {
-    id: 'airdrop-season', icon: '🪂', name: 'Airdrop Season 2024',
-    desc: 'Nhiều dự án lớn sắp airdrop: EigenLayer, Scroll, Linea, và nhiều L2 khác.',
-    coins: ['STRK','ARB','OP','ZKS','MANTA','BLAST','MODE'],
-    trend: 'active', momentum: 95,
-    keyInsight: 'Ước tính $2B+ airdrop giá trị còn lại trong năm 2024. Scroll và Linea chưa token.',
-    contexts: ['Farming strategy: bridge + swap + mint NFT trên mỗi L2','Linea và Scroll là 2 L2 lớn nhất chưa có token','Layer Zero và Wormhole airdrop có thể là game changer']
-  },
-];
-
-// ═══════════════════════════════════════════
-//  PRE-LISTING / POTENTIAL COINS DATABASE
-// ═══════════════════════════════════════════
-const PRE_LISTING_COINS = [
-  {
-    name: 'io.net', symbol: 'IO', stage: 'Token Launch',
-    desc: 'Mạng lưới GPU phân tán cho AI. Backed by Multicoin, Hack VC. Đã raise $30M Series A.',
-    signals: ['pre-listing', 'airdrop', 'ai'],
-    potential: 'Cạnh tranh trực tiếp với Akash Network nhưng focus AI inference workloads.',
-    links: 'Đang phân phối IO Points cho users.',
-    momentum: 88
-  },
-  {
-    name: 'Monad', symbol: 'MONAD', stage: 'Testnet',
-    desc: 'EVM-compatible L1 với parallel execution, 10,000 TPS. Raise $225M từ Paradigm.',
-    signals: ['pre-listing', 'trend'],
-    potential: 'Nếu đạt được benchmark TPS, có thể là Solana killer cho EVM devs.',
-    links: 'Testnet sắp ra, community points đang accumulate.',
-    momentum: 91
-  },
-  {
-    name: 'MegaETH', symbol: 'MEGA', stage: 'Pre-launch',
-    desc: 'Real-time L2 với mục tiêu 100,000 TPS. Backed by Vitalik, dragonfly.',
-    signals: ['pre-listing', 'l2'],
-    potential: 'Positioning là "internet computer" của Ethereum ecosystem.',
-    links: 'Đang build phase. Community active trên Twitter/Discord.',
-    momentum: 85
-  },
-  {
-    name: 'Babylon Chain', symbol: 'BBN', stage: 'Mainnet Beta',
-    desc: 'Bitcoin staking protocol cho PoS chains. $70M raised. BTC holders có thể stake BTC.',
-    signals: ['btc-l2', 'restaking', 'pre-listing'],
-    potential: 'Unlock $500B BTC như collateral cho DeFi. Game changer nếu adoption cao.',
-    links: 'Mainnet beta với BTC staking đang live.',
-    momentum: 89
-  },
-  {
-    name: 'Berachain', symbol: 'BERA', stage: 'Testnet → Mainnet',
-    desc: 'L1 với Proof-of-Liquidity consensus. Raise $100M. Testnet có 1M+ wallets.',
-    signals: ['pre-listing', 'defi', 'trend'],
-    potential: 'Đã generate massive hype với artio testnet. BGT token model rất innovative.',
-    links: 'Mainnet launch Q1 2024.',
-    momentum: 93
-  },
-  {
-    name: 'Story Protocol', symbol: 'IP', stage: 'Mainnet Q2 2024',
-    desc: 'Blockchain cho IP licensing và creative ownership. Backed by a16z, Samsung.',
-    signals: ['pre-listing', 'trend'],
-    potential: 'AI x IP licensing là narrative cực kỳ timely. Potential cho creator economy.',
-    links: 'Raise $54M. Mainnet target Q2 2024.',
-    momentum: 82
-  },
-  {
-    name: 'Linea', symbol: 'LINEA', stage: 'No Token Yet',
-    desc: 'ConsenSys ZK-rollup L2. $1B+ TVL, 5M+ wallets. Token chưa ra.',
-    signals: ['airdrop', 'l2', 'pre-listing'],
-    potential: 'Một trong vài L2 lớn còn chưa có token. Farming opportunities cực lớn.',
-    links: 'Bridge, trade, mint NFT để tích điểm.',
-    momentum: 87
-  },
-  {
-    name: 'Scroll', symbol: 'SCROLL', stage: 'No Token Yet',
-    desc: 'zkEVM L2, fully open source, ZK-friendly. $5B+ TVL tiệm cận zkSync.',
-    signals: ['airdrop', 'l2', 'pre-listing'],
-    potential: 'Privacy-first approach và pure ZK technology. Cộng đồng dev mạnh.',
-    links: 'Marks active, farming chưa muộn.',
-    momentum: 86
-  },
-  {
-    name: 'Karak Network', symbol: 'KARAK', stage: 'Points Season',
-    desc: 'Universal restaking protocol cạnh tranh EigenLayer. Multi-chain support.',
-    signals: ['restaking', 'airdrop', 'pre-listing'],
-    potential: 'Nếu chiếm 20% EigenLayer market share, FDV ước tính $2-5B khi launch.',
-    links: 'Đang tích điểm qua restaking ETH, BTC, stables.',
-    momentum: 84
-  },
-  {
-    name: 'LayerZero', symbol: 'ZRO', stage: 'Token Launch',
-    desc: 'Cross-chain messaging protocol kết nối 60+ chains. $263M raised tổng cộng.',
-    signals: ['airdrop', 'infrastructure'],
-    potential: 'Infrastructure thiết yếu. Nếu adoption tiếp tục, protocol fees cực lớn.',
-    links: 'ZRO airdrop snapshots đã diễn ra.',
-    momentum: 85
-  },
-];
-
-// ═══════════════════════════════════════════
-//  DATA SOURCES CONFIG
-// ═══════════════════════════════════════════
-const DATA_SOURCES = [
-  { name: 'CoinGecko', type: 'price', endpoint: 'coingecko.com', status: 'active', desc: 'Top 250 coins giá + volume' },
-  { name: 'CoinGecko Trending', type: 'trend', endpoint: 'coingecko.com/trending', status: 'active', desc: 'Trending search 24h' },
-  { name: 'CoinGecko Categories', type: 'category', endpoint: 'coingecko.com/categories', status: 'active', desc: 'Phân tích theo sector' },
-  { name: 'Fear & Greed Index', type: 'sentiment', endpoint: 'alternative.me', status: 'active', desc: 'Sentiment thị trường' },
-  { name: 'CoinGecko Global', type: 'macro', endpoint: 'coingecko.com/global', status: 'active', desc: 'Market cap tổng, BTC dominance' },
-  { name: 'DeFi Llama TVL', type: 'defi', endpoint: 'defillama.com', status: 'manual', desc: 'TVL theo protocol/chain' },
-  { name: 'Dune Analytics', type: 'onchain', endpoint: 'dune.com', status: 'manual', desc: 'On-chain metrics' },
-  { name: 'Token Terminal', type: 'revenue', endpoint: 'tokenterminal.com', status: 'manual', desc: 'Protocol revenue/fees' },
-  { name: 'Artemis', type: 'developer', endpoint: 'artemis.xyz', status: 'manual', desc: 'Developer activity' },
-];
-
-// ═══════════════════════════════════════════
-//  RATIO LOGIC
-// ═══════════════════════════════════════════
-const spotR = document.getElementById('pct-spot-range');
-const futR = document.getElementById('pct-futures-range');
-const trendR = document.getElementById('pct-trend-range');
-
-function updateRatios() {
-  let s = parseInt(spotR.value);
-  let f = parseInt(futR.value);
-  let t = parseInt(trendR.value);
-  let total = s + f + t;
-  if (total > 80) {
-    const excess = total - 80;
-    t = Math.max(0, t - excess);
-    trendR.value = t;
-    total = s + f + t;
-  }
-  let a = Math.max(0, 100 - s - f - t);
-  document.getElementById('pct-spot').textContent = s + '%';
-  document.getElementById('pct-futures').textContent = f + '%';
-  document.getElementById('pct-trend').textContent = t + '%';
-  document.getElementById('pct-airdrop').textContent = a + '%';
-  document.getElementById('rs-spot').style.width = s + '%';
-  document.getElementById('rs-fut').style.width = f + '%';
-  document.getElementById('rs-trend').style.width = t + '%';
-  document.getElementById('rs-air').style.width = a + '%';
-}
-spotR.oninput = updateRatios;
-futR.oninput = updateRatios;
-trendR.oninput = updateRatios;
-
-// ═══════════════════════════════════════════
-//  FETCH MARKET + EXTRA DATA
-// ═══════════════════════════════════════════
-async function fetchMarket() {
-  const icon = document.getElementById('fetch-icon');
-  const btn = document.getElementById('btn-fetch');
-  icon.className = 'spin'; btn.disabled = true;
-  addLog('info', 'Đang quét thị trường từ nhiều nguồn...');
-
-  try {
-    // 1. Top 250 coins
-    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h,7d';
-    const res = await fetch(url);
-    const data = await res.json();
-    addLog('ok', `✓ CoinGecko: ${data.length} coins`);
-
-    // 2. Trending
-    let trendingCoins = [];
-    try {
-      const tRes = await fetch('https://api.coingecko.com/api/v3/search/trending');
-      const tData = await tRes.json();
-      trendingCoins = (tData.coins || []).map(c => c.item.symbol.toUpperCase());
-      addLog('ok', `✓ Trending: ${trendingCoins.join(', ')}`);
-      state.trendCount = trendingCoins.length;
-      document.getElementById('m-trends').textContent = NARRATIVES.length + trendingCoins.length;
-    } catch(e) { addLog('warn', 'Trending fetch failed, dùng fallback'); }
-
-    // 3. Global market data
-    try {
-      const gRes = await fetch('https://api.coingecko.com/api/v3/global');
-      const gData = await gRes.json();
-      const btcDom = gData.data?.market_cap_percentage?.btc?.toFixed(1);
-      const totalMcap = formatVol(gData.data?.total_market_cap?.usd);
-      addLog('info', `📊 Market cap: $${totalMcap} | BTC dominance: ${btcDom}%`);
-    } catch(e) {}
-
-    // 4. Fear & Greed
-    try {
-      const fgRes = await fetch('https://api.alternative.me/fng/?limit=1');
-      const fgData = await fgRes.json();
-      const fgVal = fgData.data[0];
-      addLog('info', `😨 Fear & Greed: ${fgVal.value} (${fgVal.value_classification})`);
-    } catch(e) {}
-
-    // Build market data
-    const FUTURES_COINS = new Set(['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','BCH','TRX','NEAR','FTM','ICP','OP','ARB','APT','SUI','INJ','WLD','PEPE','WIF','TON','BONK','FLOKI','SEI','TIA','PYTH','JTO','JUP']);
-
-    state.marketData = data.map(coin => {
-      const sym = coin.symbol.toUpperCase();
-      let type = 'spot';
-      if (FUTURES_COINS.has(sym)) type = 'both';
-
-      // Category tags
-      const cats = [];
-      for (const [cat, list] of Object.entries(COIN_CATEGORIES)) {
-        if (list.includes(sym)) cats.push(cat);
-      }
-
-      // Drama detection
-      const chg24 = coin.price_change_percentage_24h || 0;
-      const chg7d = coin.price_change_percentage_7d_in_currency || 0;
-      const isDrama = Math.abs(chg24) > 8 || Math.abs(chg7d) > 20;
-      const isTrending = trendingCoins.includes(sym);
-
-      let signal = '—';
-      if (isTrending) signal = '🔥 Trending';
-      else if (chg24 > 15) signal = '🚀 Pump mạnh';
-      else if (chg24 > 8) signal = '📈 Tăng mạnh';
-      else if (chg24 < -15) signal = '💥 Dump mạnh';
-      else if (chg24 < -8) signal = '📉 Giảm mạnh';
-      else if (Math.abs(chg7d) > 30) signal = '⚡ 7d biến động';
-
-      return {
-        symbol: sym, name: coin.name, id: coin.id,
-        price: coin.current_price,
-        change24: chg24, change7d: chg7d,
-        volume: coin.total_volume,
-        marketCap: coin.market_cap,
-        rank: coin.market_cap_rank,
-        type, cats,
-        drama: isDrama || isTrending,
-        trending: isTrending,
-        signal,
-      };
-    });
-
-    document.getElementById('m-coins').textContent = state.marketData.length;
-    document.getElementById('m-coins-sub').textContent = `${trendingCoins.length} trending`;
-    document.getElementById('market-update-time').textContent = 'Cập nhật: ' + new Date().toLocaleTimeString('vi-VN');
-    addLog('ok', `✓ Tổng cộng: ${state.marketData.length} coins đã quét`);
-    renderMarketTable();
-
-  } catch(e) {
-    addLog('err', 'Lỗi fetch market: ' + e.message);
-  }
-
-  icon.className = ''; icon.textContent = '⟳'; btn.disabled = false;
+function log(type,msg){
+  const w=$('log-w'),t=ts();
+  const cls={ok:'log-ok',err:'log-err',info:'log-info',warn:'log-warn'}[type]||'log-info';
+  const d=document.createElement('div');d.className='log-line';
+  d.innerHTML=`<span class="log-ts">${t}</span><span class="${cls}">${esc(msg)}</span>`;
+  w.appendChild(d);w.scrollTop=w.scrollHeight;
 }
 
-async function scanAllSources() {
-  addLog('info', '🔍 Bắt đầu quét tất cả nguồn dữ liệu...');
-  addSourceLog('info', '── Bắt đầu multi-source scan ──');
-  await fetchMarket();
-  refreshNarratives();
-  renderPreListing();
-  addSourceLog('ok', '✓ Hoàn tất tất cả nguồn. Sẵn sàng tạo bài viết.');
-  switchTab('sources');
+function st(name){
+  const names=['market','intel','narratives','airdrops','preview','log','history'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
 }
 
-// ═══════════════════════════════════════════
-//  RENDER MARKET TABLE
-// ═══════════════════════════════════════════
-function renderMarketTable(filter) {
-  if (filter) state.marketFilter = filter;
-  const f = state.marketFilter;
-  let data = [...state.marketData];
-
-  if (f === 'spot') data = data.filter(c => c.type === 'spot');
-  else if (f === 'futures') data = data.filter(c => c.type === 'both');
-  else if (f === 'drama') data = data.filter(c => c.drama).sort((a,b) => Math.abs(b.change24) - Math.abs(a.change24));
-  else if (f === 'gainer') data = data.filter(c => c.change24 > 0).sort((a,b) => b.change24 - a.change24);
-  else if (f === 'loser') data = data.filter(c => c.change24 < 0).sort((a,b) => a.change24 - b.change24);
-  else if (f === 'defi') data = data.filter(c => c.cats.includes('defi'));
-  else if (f === 'ai') data = data.filter(c => c.cats.includes('ai'));
-  else if (f === 'l2') data = data.filter(c => c.cats.includes('l2'));
-  else if (f === 'meme') data = data.filter(c => c.cats.includes('meme'));
-
-  const tbody = document.getElementById('market-tbody');
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono);">Không có dữ liệu</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = data.slice(0, 80).map(c => {
-    const chg24 = c.change24 ? c.change24.toFixed(2) : '0.00';
-    const chg7d = c.change7d ? c.change7d.toFixed(2) : '0.00';
-    const cls24 = parseFloat(chg24) >= 0 ? 'up' : 'down';
-    const cls7d = parseFloat(chg7d) >= 0 ? 'up' : 'down';
-    const sign24 = parseFloat(chg24) >= 0 ? '+' : '';
-    const sign7d = parseFloat(chg7d) >= 0 ? '+' : '';
-    const vol = formatVol(c.volume);
-
-    const typeBadges = c.type === 'both'
-      ? '<span class="badge spot">SPOT</span> <span class="badge futures">FUT</span>'
-      : '<span class="badge spot">SPOT</span>';
-
-    const catBadges = c.cats.slice(0,1).map(cat => {
-      const colors = { defi:'blue', ai:'airdrop', l2:'futures', meme:'drama', rwa:'narrative', gaming:'trend' };
-      return `<span class="badge ${colors[cat]||'spot'}" style="font-size:8px;">${cat.toUpperCase()}</span>`;
-    }).join('');
-
-    const trendBadge = c.trending ? '<span class="badge trend" style="font-size:8px;">🔥 HOT</span>' : '';
-
-    return `<tr onclick="selectCoinForPost('${c.symbol}')" style="cursor:pointer;">
-      <td>
-        <span class="coin-name">#${c.rank} $${c.symbol}</span><br/>
-        <span class="coin-tag">${c.name}</span>
-      </td>
-      <td>${typeBadges}<br/>${catBadges} ${trendBadge}</td>
-      <td style="font-family:var(--mono);">$${formatPrice(c.price)}</td>
-      <td class="${cls24}" style="font-family:var(--mono);font-weight:600;">${sign24}${chg24}%</td>
-      <td class="${cls7d}" style="font-family:var(--mono);">${sign7d}${chg7d}%</td>
-      <td style="font-family:var(--mono);color:var(--text2);">$${vol}</td>
-      <td style="font-size:11px;">${c.signal}</td>
-    </tr>`;
-  }).join('');
+function switchPlat(){
+  const p=$('platform').value;
+  $('tg-f').style.display=p==='telegram'?'block':'none';
+  $('bn-f').style.display=p==='binance'?'block':'none';
 }
 
-function filterMarket(f) { state.marketFilter = f; renderMarketTable(); }
-
-// ═══════════════════════════════════════════
-//  RENDER TRENDS & NARRATIVES
-// ═══════════════════════════════════════════
-function refreshNarratives() {
-  // Trend grid (categories)
-  const trends = [
-    { id:'ai', label:'🤖 AI & DePIN', desc:'FET, AGIX, TAO, RNDR, GRT', momentum:92 },
-    { id:'btc-eco', label:'₿ Bitcoin Ecosystem', desc:'ORDI, STX, Runes, Ordinals', momentum:88 },
-    { id:'restaking', label:'🔄 Restaking', desc:'EIGEN, LDO, RPL, SSV', momentum:85 },
-    { id:'rwa', label:'🏦 RWA Tokenization', desc:'ONDO, POLYX, MPL, RIO', momentum:90 },
-    { id:'ton', label:'💎 TON & Telegram', desc:'TON, DOGS, NOTCOIN, STON', momentum:87 },
-    { id:'modular', label:'⚡ Modular Blockchain', desc:'TIA, ALT, AVAIL, DYMENSION', momentum:80 },
-    { id:'sol-eco', label:'◎ Solana Ecosystem', desc:'JUP, JTO, BONK, WIF, PYTH', momentum:94 },
-    { id:'airdrop', label:'🪂 Airdrop Season', desc:'Scroll, Linea, LayerZero, ZRO', momentum:95 },
-    { id:'gaming', label:'🎮 GameFi 2.0', desc:'BEAM, RON, PRIME, AXS revival', momentum:75 },
-    { id:'depin', label:'📡 DePIN', desc:'io.net, Helium, Hivemapper', momentum:83 },
-    { id:'meme', label:'🐸 Meme Supercycle', desc:'DOGE, WIF, BRETT, POPCAT', momentum:89 },
-    { id:'privacy', label:'🔒 Privacy Coins', desc:'XMR, ZEC, SCRT, DUSK', momentum:70 },
-  ];
-
-  const grid = document.getElementById('trend-grid');
-  grid.innerHTML = trends.map(t => `
-    <div class="trend-card ${state.selectedTrend === t.id ? 'selected' : ''}" onclick="selectTrend('${t.id}','${escHtml(t.label)}')">
-      <div class="trend-title">${t.label}</div>
-      <div class="trend-desc">${t.desc}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-        <div style="flex:1;background:var(--bg4);border-radius:3px;height:4px;overflow:hidden;margin-right:8px;">
-          <div style="width:${t.momentum}%;height:100%;background:var(--green);border-radius:3px;"></div>
-        </div>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--green);">${t.momentum}%</span>
-      </div>
-    </div>
-  `).join('');
-
-  // Narrative list
-  const narList = document.getElementById('narrative-list');
-  narList.innerHTML = NARRATIVES.map(n => `
-    <div class="narrative-item ${state.selectedNarrative === n.id ? 'selected' : ''}" onclick="selectNarrative('${n.id}')">
-      <div class="narrative-icon">${n.icon}</div>
-      <div class="narrative-info">
-        <div class="narrative-name">${n.name}</div>
-        <div class="narrative-coins">$${n.coins.join(' $')}</div>
-        <div class="narrative-desc">${n.desc}</div>
-        <div style="margin-top:4px;font-size:10px;color:var(--accent);font-family:var(--mono);">💡 ${n.keyInsight}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${n.trend==='bullish'?'var(--green)':n.trend==='active'?'var(--teal)':'var(--text2)'};">${n.momentum}%</div>
-        <div style="font-size:9px;color:var(--text3);">momentum</div>
-      </div>
-    </div>
-  `).join('');
-
-  addLog('ok', `Narratives refreshed: ${NARRATIVES.length} narratives, ${trends.length} trends`);
+function updateRatios(){
+  const s=+$('r-spot').value,f=+$('r-fut').value,n=+$('r-narr').value,a=+$('r-air').value;
+  const o=Math.max(0,100-s-f-n-a);
+  $('p-spot').textContent=s+'%';$('p-fut').textContent=f+'%';$('p-narr').textContent=n+'%';$('p-air').textContent=a+'%';$('p-off').textContent=o+'%';
+  $('rs-s').style.width=s+'%';$('rs-f').style.width=f+'%';$('rs-n').style.width=n+'%';$('rs-a').style.width=a+'%';$('rs-o').style.width=o+'%';
 }
+['r-spot','r-fut','r-narr','r-air'].forEach(id=>$(id).oninput=updateRatios);
 
-function selectTrend(id, label) {
-  state.selectedTrend = id;
-  state.selectedNarrative = null;
-  refreshNarratives();
-  addLog('info', `Đã chọn trend: ${label}`);
-}
+function showOv(title,step,pct){$('ov').classList.add('show');$('ov-title').textContent=title;$('ov-step').textContent=step;$('ov-pfill').style.width=pct+'%';}
+function hideOv(){$('ov').classList.remove('show');}
 
-function selectNarrative(id) {
-  state.selectedNarrative = id;
-  state.selectedTrend = null;
-  refreshNarratives();
-  const n = NARRATIVES.find(x => x.id === id);
-  addLog('info', `Đã chọn narrative: ${n.name} — Coins: $${n.coins.join(', $')}`);
-}
-
-// ═══════════════════════════════════════════
-//  RENDER PRE-LISTING
-// ═══════════════════════════════════════════
-function renderPreListing() {
-  const list = document.getElementById('prelisting-list');
-  list.innerHTML = PRE_LISTING_COINS.map(p => {
-    const signalBadges = p.signals.map(s => {
-      const cfg = {
-        'pre-listing': ['pre-listing','🚀 Pre-listing'],
-        'airdrop': ['airdrop','🪂 Airdrop'],
-        'ai': ['airdrop','🤖 AI'],
-        'btc-l2': ['narrative','₿ BTC L2'],
-        'restaking': ['futures','🔄 Restaking'],
-        'defi': ['spot','🏦 DeFi'],
-        'l2': ['futures','⚡ L2'],
-        'trend': ['trend','🔥 Trend'],
-        'infrastructure': ['spot','🏗 Infra'],
-      };
-      const [cls, label] = cfg[s] || ['spot', s];
-      return `<span class="badge ${cls}">${label}</span>`;
-    }).join('');
-
-    return `<div class="prelisting-item">
-      <div class="prelisting-header">
-        <span class="prelisting-name">$${p.symbol}</span>
-        <span style="font-size:12px;color:var(--text2);">${p.name}</span>
-        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(240,185,11,0.1);color:var(--accent);border:1px solid rgba(240,185,11,0.3);">${p.stage}</span>
-      </div>
-      <div class="prelisting-meta">${p.desc}</div>
-      <div class="prelisting-meta" style="color:var(--green);margin-top:4px;">💡 ${p.potential}</div>
-      <div class="prelisting-meta" style="color:var(--teal);margin-top:2px;">📍 ${p.links}</div>
-      <div class="signal-bar">${signalBadges}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-        <div style="flex:1;background:var(--bg4);border-radius:3px;height:4px;overflow:hidden;">
-          <div style="width:${p.momentum}%;height:100%;background:var(--accent);border-radius:3px;"></div>
-        </div>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--accent);">${p.momentum}% hype</span>
-        <button class="btn" style="font-size:10px;padding:3px 10px;color:var(--teal);border-color:rgba(0,188,212,0.3);" onclick="generatePreListingPost('${p.symbol}')">✍ Viết bài</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════
-//  RENDER SOURCES
-// ═══════════════════════════════════════════
-function renderSources() {
-  const grid = document.getElementById('source-grid');
-  grid.innerHTML = DATA_SOURCES.map(s => `
-    <div class="source-item">
-      <div class="source-name">${s.name}</div>
-      <div class="source-status ${s.status === 'active' ? 'source-ok' : 'source-warn'}">
-        ${s.status === 'active' ? '● Active' : '○ Manual'}
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px;">${s.desc}</div>
-    </div>
-  `).join('');
-}
-
-function addSourceLog(type, msg) {
-  const wrap = document.getElementById('source-log');
-  const ts = new Date().toLocaleTimeString('vi-VN');
-  const cls = { ok:'log-ok', err:'log-err', info:'log-info', warn:'log-warn' }[type] || 'log-info';
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  line.innerHTML = `<span class="log-ts">${ts}</span><span class="${cls}">${escHtml(msg)}</span>`;
-  wrap.appendChild(line);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-// ═══════════════════════════════════════════
-//  COIN SELECTION
-// ═══════════════════════════════════════════
-function selectCoinForPost(symbol) {
-  const coin = state.marketData.find(c => c.symbol === symbol);
-  if (!coin) return;
-  addLog('info', `Chọn $${symbol} để tạo bài viết...`);
-  previewOnlyCoin(coin, 'spot');
-}
-
-async function generatePreListingPost(symbol) {
-  const p = PRE_LISTING_COINS.find(x => x.symbol === symbol);
-  if (!p) return;
-  addLog('info', `Tạo bài về pre-listing: $${symbol}...`);
-  try {
-    const content = await generatePost(null, 'pre-listing', p);
-    showPreview(content, { symbol: p.symbol, name: p.name, change24: 0 }, 'pre-listing');
-  } catch(e) {
-    addLog('err', e.message);
-  }
-}
-
-// ═══════════════════════════════════════════
-//  PICK COIN/TOPIC LOGIC
-// ═══════════════════════════════════════════
-function pickTopicForPost() {
-  const s = parseInt(spotR.value);
-  const f = parseInt(futR.value);
-  const t = parseInt(trendR.value);
-  const a = 100 - s - f - t;
-  const r = Math.random() * 100;
-
-  if (r < a) {
-    // Airdrop / Pre-listing
-    const p = PRE_LISTING_COINS[Math.floor(Math.random() * PRE_LISTING_COINS.length)];
-    return { type: 'pre-listing', coin: null, preItem: p, narrative: null };
-  } else if (r < a + t) {
-    // Narrative / Trend
-    // Prefer selected narrative if any
-    const n = state.selectedNarrative
-      ? NARRATIVES.find(x => x.id === state.selectedNarrative)
-      : NARRATIVES[Math.floor(Math.random() * NARRATIVES.length)];
-    // Pick a coin from the narrative
-    const sym = n.coins[Math.floor(Math.random() * n.coins.length)];
-    const coin = state.marketData.find(c => c.symbol === sym) || { symbol: sym, name: sym, price: 0, change24: 0, volume: 0 };
-    return { type: 'narrative', coin, preItem: null, narrative: n };
-  } else if (r < a + t + s) {
-    // Spot drama
-    let pool = state.marketData.filter(c => c.drama);
-    if (!pool.length) pool = state.marketData.slice(0, 20);
-    const coin = pool[Math.floor(Math.random() * Math.min(pool.length, 15))];
-    return { type: 'spot', coin, preItem: null, narrative: null };
-  } else {
-    // Futures
-    let pool = state.marketData.filter(c => c.type === 'both');
-    if (!pool.length) pool = state.marketData.slice(0, 10);
-    const coin = pool[Math.floor(Math.random() * Math.min(pool.length, 15))];
-    return { type: 'futures', coin, preItem: null, narrative: null };
-  }
-}
-
-// ═══════════════════════════════════════════
-//  OPTIMIZED PROMPT BUILDER
-// ═══════════════════════════════════════════
-function buildSystemPrompt() {
-  const noExchangeTag = document.getElementById('opt-no-exchange-tag').checked;
-  const noFinancialAdvice = document.getElementById('opt-no-financial-advice').checked;
-
-  let sys = `You are an expert crypto analyst and content creator with deep knowledge of blockchain technology, DeFi, tokenomics, and market psychology.
-
-Your writing style: Authentic, knowledgeable, engaging. You sound like a seasoned trader who genuinely understands the tech, not a marketing copywriter.
-
-Platform: Crypto social media (Twitter/X style posts, crypto forums, Telegram channels).`;
-
-  if (noExchangeTag) {
-    sys += `\n\nIMPORTANT: Do NOT mention any exchange names (Binance, Coinbase, OKX, Bybit, etc.) in your posts. Do not tag exchanges. Focus on the asset/project itself.`;
-  }
-
-  if (noFinancialAdvice) {
-    sys += `\n\nAlways include a brief disclaimer at the end: "NFA. DYOR." or similar.`;
-  }
-
-  const customP = document.getElementById('custom-prompt').value.trim();
-  if (customP) sys += `\n\nAdditional instructions: ${customP}`;
-
-  return sys;
-}
-
-function buildUserPrompt(type, coin, preItem, narrative) {
-  const lang = document.getElementById('lang').value;
-  const length = document.getElementById('post-length').value;
-  const tone = document.getElementById('tone').value;
-  const includeData = document.getElementById('opt-include-data').checked;
-  const callToAction = document.getElementById('opt-call-to-action').checked;
-  const riskMgmt = document.getElementById('opt-risk-mgmt').checked;
-  const onChain = document.getElementById('opt-on-chain').checked;
-
-  const langMap = { vi: 'Vietnamese (sử dụng tiếng Việt tự nhiên, không dịch máy)', en: 'English', bilingual: 'Bilingual — Vietnamese first, then English translation below (separated by ----)' };
-  const lengthMap = { short: '100-160 words', medium: '250-330 words', long: '450-560 words' };
-  const toneMap = {
-    analytical: 'Deep analytical, data-driven. Reference specific metrics, on-chain data, macro context. Professional trader perspective.',
-    drama: 'Dramatic and engaging. Use urgency, vivid metaphors, FOMO triggers. Make readers feel they are witnessing history. Crypto Twitter native style.',
-    educational: 'Educational but engaging. Break down complex concepts. Use analogies. Empower the reader to understand and act.',
-    alpha: 'Alpha hunter style. Drop insider insights, on-chain signals, wallet behaviors, smart money movements. Forward-looking analysis.',
-    degen: 'Full degen energy. Raw, unfiltered, meme-aware, using crypto slang naturally (gm, ngmi, lfg, rug, CT). Authentic crypto native voice.',
+// ═══════ OPENAI CALL ═══════
+async function callOAI({system,user,webSearch=false,json=false}){
+  const key=$('oai-key').value.trim();
+  if(!key) throw new Error('Chưa nhập OpenAI API key');
+  const body={
+    model:'gpt-4o',max_tokens:1500,temperature:0.7,
+    messages:[{role:'system',content:system},{role:'user',content:user}],
   };
-
-  let prompt = '';
-
-  if (type === 'pre-listing' && preItem) {
-    prompt = `Write a crypto social media post about $${preItem.symbol} (${preItem.name}).
-
-PROJECT CONTEXT:
-- Stage: ${preItem.stage}
-- Description: ${preItem.desc}
-- Key potential: ${preItem.potential}
-- Current opportunity: ${preItem.links}
-- Signals: ${preItem.signals.join(', ')}
-
-POST REQUIREMENTS:
-- Language: ${langMap[lang]}
-- Length: ${lengthMap[length]}
-- Tone: ${toneMap[tone]}
-- This is a PRE-LISTING / upcoming project. Focus on: why this matters NOW, what the catalyst is, what readers can do to participate (farming, testnet, points, etc.)
-- Do NOT hype irresponsibly. Be factual but compelling.`;
-
-    if (callToAction) prompt += `\n- End with an engaging question like "Are you farming this?" or "Have you checked this out?"`;
-    prompt += `\n- End with relevant hashtags: $${preItem.symbol} and 3-5 related topic tags (e.g., $AIRDROP, $L2, $AI, etc.)
-- NO exchange name tags in hashtags.`;
-
-  } else if (type === 'narrative' && narrative && coin) {
-    const chg = coin.change24 ? coin.change24.toFixed(2) : '0';
-    prompt = `Write a crypto social media post analyzing the "${narrative.name}" narrative with focus on $${coin.symbol}.
-
-NARRATIVE CONTEXT:
-- Theme: ${narrative.name} — ${narrative.desc}
-- Key insight: ${narrative.keyInsight}
-- Context points: ${narrative.contexts.join('; ')}
-- Key coins in this narrative: $${narrative.coins.join(', $')}
-
-MARKET DATA for $${coin.symbol}:
-- Price: $${formatPrice(coin.price || 0)}
-- 24h change: ${parseFloat(chg) >= 0 ? '+' : ''}${chg}%
-- Volume: $${formatVol(coin.volume || 0)}
-
-POST REQUIREMENTS:
-- Language: ${langMap[lang]}
-- Length: ${lengthMap[length]}
-- Tone: ${toneMap[tone]}
-- Explain WHY this narrative is important NOW
-- Connect macro crypto trends to this specific narrative
-- Mention 2-3 coins in the narrative and why they matter`;
-
-    if (onChain) prompt += `\n- Include at least one on-chain or fundamental signal that supports the thesis`;
-    if (callToAction) prompt += `\n- End with a thought-provoking question for the reader`;
-    prompt += `\n- Hashtags: $${coin.symbol} + 3-4 relevant narrative tags. NO exchange names.`;
-
-  } else if (coin) {
-    // Spot or Futures
-    const chg = coin.change24 ? coin.change24.toFixed(2) : '0';
-    const chg7 = coin.change7d ? coin.change7d.toFixed(2) : '0';
-    const sign = parseFloat(chg) >= 0 ? '+' : '';
-
-    prompt = `Write a crypto social media post about $${coin.symbol} (${coin.name}).
-
-MARKET DATA:
-- Current price: $${formatPrice(coin.price || 0)}
-- 24h change: ${sign}${chg}%
-- 7d change: ${parseFloat(chg7)>=0?'+':''}${chg7}%
-- 24h volume: $${formatVol(coin.volume || 0)}
-- Market rank: #${coin.rank || 'N/A'}
-- Market signal: ${coin.signal || '—'}
-- Category: ${coin.cats?.join(', ') || 'general'}
-
-POST TYPE: ${type === 'futures' ? 'Derivatives/Futures market analysis — mention funding rates, open interest, liquidation zones, leverage dynamics.' : 'Spot market analysis — focus on accumulation, distribution, on-chain activity, holder behavior.'}
-
-POST REQUIREMENTS:
-- Language: ${langMap[lang]}
-- Length: ${lengthMap[length]}
-- Tone: ${toneMap[tone]}`;
-
-    if (includeData) prompt += `\n- Ground the post in specific data points from the market data above`;
-    if (onChain) prompt += `\n- Include one on-chain or market structure insight (whale activity, exchange flows, OI changes, etc.)`;
-    if (riskMgmt) prompt += `\n- Mention a key risk level or risk management consideration`;
-    if (callToAction) prompt += `\n- End with an engaging question or call-to-action`;
-    prompt += `\n- Hashtags: $${coin.symbol} + 3-5 relevant topic tags based on category. NO exchange names.`;
-    prompt += `\n- Make the insight feel exclusive, like an alpha drop from someone who really knows the market.`;
-  }
-
-  return prompt;
-}
-
-// ═══════════════════════════════════════════
-//  GENERATE POST WITH OPENAI
-// ═══════════════════════════════════════════
-async function generatePost(coin, type, preItem = null, narrative = null) {
-  const key = document.getElementById('openai-key').value.trim();
-  if (!key) throw new Error('Chưa nhập OpenAI API key');
-
-  const systemPrompt = buildSystemPrompt();
-  const userPrompt = buildUserPrompt(type, coin, preItem, narrative);
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      max_tokens: 900,
-      temperature: 0.88,
-      presence_penalty: 0.3,
-      frequency_penalty: 0.2,
-    })
+  if(webSearch) body.tools=[{type:'web_search_preview'}],body.tool_choice='auto';
+  if(json) body.response_format={type:'json_object'};
+  const res=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body)
   });
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || 'OpenAI API error');
-  }
-
-  const data = await res.json();
-  return data.choices[0].message.content;
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'OpenAI error');}
+  const data=await res.json();
+  const msg=data.choices[0].message;
+  if(typeof msg.content==='string') return msg.content.trim();
+  if(Array.isArray(msg.content)) return msg.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  return '';
 }
 
-// ═══════════════════════════════════════════
-//  POST TO BINANCE SQUARE (or copy)
-// ═══════════════════════════════════════════
-async function postToBinance(content, coin) {
-  const apiKey = document.getElementById('binance-key').value.trim();
-  const secret = document.getElementById('binance-secret').value.trim();
-
-  if (!apiKey || !secret) {
-    addLog('warn', '⚠ Không có Binance API key — Bài viết đã sẵn sàng để copy thủ công.');
-    return { success: true, postId: 'MANUAL_' + Date.now(), simulated: true };
-  }
-
-  const timestamp = Date.now();
-  const payload = { content, timestamp };
-  addLog('warn', `[BINANCE SQUARE API] Payload ready. Cần backend để ký HMAC SHA256.`);
-  addLog('warn', `⚠ Binance Square Creator API yêu cầu Apply qua Creator Program.`);
-  return { success: true, postId: 'PENDING_' + timestamp, simulated: true };
-}
-
-// ═══════════════════════════════════════════
-//  MAIN CYCLE
-// ═══════════════════════════════════════════
-async function runCycle(postFlag = true) {
-  addLog('info', '── Bắt đầu chu kỳ mới ──');
-
-  if (!state.marketData.length) {
-    addLog('info', 'Chưa có dữ liệu, đang quét...');
-    await fetchMarket();
-  }
-
-  if (!state.marketData.length) {
-    addLog('err', 'Không thể lấy dữ liệu thị trường');
-    return;
-  }
-
-  const topic = pickTopicForPost();
-  const { type, coin, preItem, narrative } = topic;
-
-  const label = type === 'pre-listing' ? `$${preItem.symbol} [Pre-listing]`
-    : type === 'narrative' ? `${narrative.name} / $${coin?.symbol}`
-    : `$${coin?.symbol} [${type}]`;
-
-  addLog('info', `Chọn topic: ${label}`);
-  addLog('info', `Gọi GPT-4o để tạo bài...`);
-
-  let content;
-  try {
-    content = await generatePost(coin, type, preItem, narrative);
-    addLog('ok', `✓ Bài viết tạo xong (${content.length} ký tự)`);
-  } catch(e) {
-    addLog('err', 'Lỗi OpenAI: ' + e.message);
-    return;
-  }
-
-  const displayCoin = coin || (preItem ? { symbol: preItem.symbol, name: preItem.name, change24: 0 } : { symbol: '?', name: '?', change24: 0 });
-  showPreview(content, displayCoin, type);
-
-  if (postFlag) {
-    try {
-      const res = await postToBinance(content, displayCoin);
-      if (res.success) {
-        state.posted++;
-        document.getElementById('m-posted').textContent = state.posted;
-        addLog('ok', `✓ Bài #${state.posted} sẵn sàng — ID: ${res.postId}${res.simulated ? ' [COPY/MANUAL]' : ''}`);
-        addToHistory(content, displayCoin, type, res.postId);
-      }
-    } catch(e) {
-      addLog('err', 'Lỗi: ' + e.message);
-    }
-  }
-}
-
-// ═══════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════
-function showPreview(content, coin, type) {
-  const typeColors = {
-    'spot': 'var(--blue)',
-    'futures': 'var(--purple)',
-    'narrative': 'var(--green)',
-    'pre-listing': 'var(--orange)',
-    'airdrop': 'var(--teal)',
-  };
-  const typeLabels = {
-    'spot': 'SPOT', 'futures': 'FUTURES', 'narrative': 'NARRATIVE',
-    'pre-listing': 'PRE-LISTING', 'airdrop': 'AIRDROP',
-  };
-  const color = typeColors[type] || 'var(--accent)';
-  const label = typeLabels[type] || type.toUpperCase();
-
-  const charCount = content.length;
-  const wordCount = content.split(/\s+/).filter(Boolean).length;
-
-  const html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,0.3);color:${color};border:1px solid ${color}40;">${label}</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--accent);">$${coin.symbol}</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);">${new Date().toLocaleString('vi-VN')}</span>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);">${wordCount} words · ${charCount} chars</span>
-        <button class="btn copy-btn" onclick="copyContent()">📋 Copy</button>
-      </div>
-    </div>
-    <div class="post-card" id="preview-post-card">
-      <div class="post-body" id="preview-post-body">${escHtml(content)}</div>
-    </div>`;
-
-  document.getElementById('preview-empty').style.display = 'none';
-  document.getElementById('preview-content').style.display = 'block';
-  document.getElementById('preview-content').innerHTML = html;
-  switchTab('preview');
-
-  // Store content for copy
-  window._lastPreviewContent = content;
-}
-
-function copyContent() {
-  if (window._lastPreviewContent) {
-    navigator.clipboard.writeText(window._lastPreviewContent).then(() => {
-      addLog('ok', '✓ Đã copy bài viết vào clipboard!');
-    }).catch(() => {
-      addLog('warn', 'Copy thất bại, hãy copy thủ công.');
+// ═══════ 1. MARKET — CoinGecko real-time ═══════
+async function fetchMkt(){
+  $('mkt-ic').className='spin';$('btn-mkt').disabled=true;
+  log('info','Fetching CoinGecko top 100 + trending...');
+  try{
+    const bl=($('blist').value||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+    const [r1,r2]=await Promise.all([
+      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h'),
+      fetch('https://api.coingecko.com/api/v3/search/trending')
+    ]);
+    const d1=await r1.json(),d2=await r2.json();
+    const trending=new Set((d2.coins||[]).map(c=>c.item.symbol.toUpperCase()));
+    const futSet=S.intel.futuresList.length?new Set(S.intel.futuresList):new Set(['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','TRX','NEAR','OP','ARB','APT','SUI','INJ','WLD','JUP','WIF','BONK','STRK','TIA']);
+    S.coins=[];
+    d1.forEach(c=>{
+      const sym=c.symbol.toUpperCase();
+      if(bl.includes(sym))return;
+      const chg=Math.abs(c.price_change_percentage_24h||0);
+      const isTrend=trending.has(sym);
+      const ai=S.intel.dramaCoins.find(d=>d.symbol===sym);
+      S.coins.push({
+        symbol:sym,name:c.name,price:c.current_price,change:c.price_change_percentage_24h,
+        volume:c.total_volume,mcap:c.market_cap,
+        type:futSet.has(sym)?(Math.random()>.5?'futures':'spot'):'spot',
+        drama:chg>5||isTrend||!!ai,
+        dramaLabel:ai?.signal||(isTrend?'🔥 Trending':(chg>8?'🚀 Pump':(chg>5?'⚡ Move':'—'))),
+        narrative:ai?.narrative||'',isGem:c.market_cap<100e6&&c.market_cap>1e6,
+      });
     });
+    $('m-coins').textContent=S.coins.length;
+    $('mkt-ts').textContent='Updated '+ts();
+    $('m-scan').textContent=ts();
+    log('ok',`Loaded ${S.coins.length} coins. ${trending.size} trending on CoinGecko.`);
+    renderMkt();
+  }catch(e){log('err','Market error: '+e.message);}
+  $('mkt-ic').className='';$('mkt-ic').textContent='⟳';$('btn-mkt').disabled=false;
+}
+
+function renderMkt(){
+  let data=S.coins;
+  if(S.cf==='drama') data=data.filter(c=>c.drama);
+  else if(S.cf==='futures') data=data.filter(c=>c.type==='futures');
+  else if(S.cf==='off') data=data.filter(c=>c.type==='off-chain');
+  else if(S.cf==='gem') data=data.filter(c=>c.isGem);
+  const tbody=$('mkt-body');
+  if(!data.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Không có dữ liệu</td></tr>';return;}
+  tbody.innerHTML=data.slice(0,60).map(c=>{
+    const chg=(c.change||0).toFixed(2),cls=parseFloat(chg)>=0?'up':'down',sign=parseFloat(chg)>=0?'+':'';
+    const tB=c.type==='off-chain'?'<span class="badge off">OFF</span>':c.type==='futures'?'<span class="badge futures">PERP</span>':'<span class="badge spot">SPOT</span>';
+    const gB=c.isGem?'<span class="badge gem" style="font-size:8px">GEM</span>':'';
+    const nB=c.narrative?`<span class="badge narr" style="font-size:8px">${esc(c.narrative.substring(0,14))}</span>`:'';
+    const dB=c.drama?'<span class="badge drama" style="font-size:8px">DRAMA</span>':'';
+    return `<tr><td><span class="cn">$${c.symbol}</span> <span class="ct">${esc(c.name.substring(0,12))}</span></td><td>${tB}${gB}</td><td style="font-family:var(--mono)">$${fmtP(c.price)}</td><td class="${cls}" style="font-family:var(--mono);font-weight:600">${sign}${chg}%</td><td style="font-family:var(--mono);color:var(--text2)">$${fmtV(c.volume)}</td><td>${nB}</td><td>${dB}<span style="font-size:10px;color:var(--text2)">${esc(c.dramaLabel||'')}</span></td></tr>`;
+  }).join('');
+}
+function flt(f){S.cf=f;renderMkt();}
+
+// ═══════ 2. AI INTEL — web search ═══════
+async function fetchIntel(){
+  $('intel-ic').className='spin';$('btn-intel').disabled=true;
+  log('info','AI searching: funding rates, whale moves, drama signals...');
+  const today=new Date().toLocaleDateString('vi-VN');
+  try{
+    // FUNDING
+    log('info','[1/3] Funding rates & OI...');
+    const funding=await callOAI({webSearch:true,
+      system:`Crypto market analyst. Today ${today}. Answer in Vietnamese. Return plain text, no markdown headers.`,
+      user:`Search web for current crypto futures funding rates and open interest (${today}). Find: extreme funding rates (very positive/negative), total OI changes, liquidations in last 24h. Return 3-5 sentences with specific coins and numbers.`
+    });
+    $('fund-body').textContent=funding;$('fund-ts').textContent=ts();S.intel.funding=funding;
+    log('ok','Funding rates done');
+
+    // WHALE
+    log('info','[2/3] Whale & on-chain...');
+    const whale=await callOAI({webSearch:true,
+      system:`Crypto on-chain analyst. Today ${today}. Answer in Vietnamese. Be specific with amounts and coins.`,
+      user:`Search Lookonchain, Whale Alert, Nansen for latest crypto whale moves today (${today}). Find: large wallet transfers, exchange inflows/outflows, whale accumulation/distribution. Return 3-5 sentences with specific coins, amounts, what it signals.`
+    });
+    $('whale-body').textContent=whale;$('whale-ts').textContent=ts();S.intel.whale=whale;
+    log('ok','Whale data done');
+
+    // DRAMA + FUTURES LIST
+    log('info','[3/3] Drama signals + futures list...');
+    const raw=await callOAI({webSearch:true,json:true,
+      system:`Crypto market intelligence tool. Today ${today}. Return ONLY valid JSON, no markdown.`,
+      user:`Search web for current crypto market news and drama today (${today}).
+Return JSON:
+{
+  "drama_summary": "3-4 sentence summary in Vietnamese of biggest crypto news/drama right now",
+  "drama_coins": [{"symbol":"BTC","signal":"specific reason why in focus today","narrative":"narrative category"}],
+  "futures_list": ["BTC","ETH","SOL"],
+  "hot_narrative": "single hottest narrative sentence"
+}
+drama_coins: 5-10 coins with specific news/events TODAY. futures_list: current coins available as perpetuals on major DEXs (20-35 coins).`
+    });
+    let parsed;
+    try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+    catch{parsed={drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
+    $('drama-body').textContent=parsed.drama_summary||raw;
+    $('drama-ts').textContent=ts();
+    S.intel.drama=parsed.drama_summary||'';
+    S.intel.dramaCoins=parsed.drama_coins||[];
+    S.intel.futuresList=parsed.futures_list||[];
+    $('drama-tags').innerHTML=S.intel.dramaCoins.map(d=>`<span class="chip on">$${esc(d.symbol)}: ${esc(d.signal)}</span>`).join('');
+    $('fut-tags').innerHTML=S.intel.futuresList.map(s=>`<span class="chip">$${esc(s)}</span>`).join('');
+    $('fut-ts').textContent=ts();
+    log('ok',`Drama: ${S.intel.dramaCoins.length} signals. Futures: ${S.intel.futuresList.length} coins.`);
+    // Update market table with new signals
+    if(S.coins.length){
+      S.coins.forEach(c=>{const d=S.intel.dramaCoins.find(x=>x.symbol===c.symbol);if(d){c.drama=true;c.dramaLabel=d.signal;c.narrative=d.narrative||c.narrative;}});
+      renderMkt();
+    }
+  }catch(e){log('err','Intel error: '+e.message);}
+  $('intel-ic').className='';$('intel-ic').textContent='⟳';$('btn-intel').disabled=false;
+}
+
+// ═══════ 3. NARRATIVES — AI web search ═══════
+async function fetchNarr(){
+  $('narr-ic').className='spin';$('btn-narr').disabled=true;
+  log('info','AI fetching trending narratives...');
+  const today=new Date().toLocaleDateString('vi-VN');
+  try{
+    const raw=await callOAI({webSearch:true,json:true,
+      system:`Crypto narrative analyst. Today ${today}. Return ONLY valid JSON, no markdown.`,
+      user:`Search crypto Twitter, Reddit, news sites for hottest narratives RIGHT NOW (${today}).
+Return JSON:
+{"narratives":[{"name":"narrative name","description":"2-3 sentences why hot RIGHT NOW with specific catalyst","coins":["COIN1","COIN2","COIN3","COIN4"],"heat":4,"catalyst":"specific event/news driving this today","risk":"main risk"}]}
+Include 6-10 narratives. heat=1-5. Focus on what's actually trending TODAY.`
+    });
+    let parsed;
+    try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+    catch{parsed={narratives:[]};}
+    S.narratives=parsed.narratives||[];
+    renderNarr();
+    log('ok','Fetched '+S.narratives.length+' narratives');
+  }catch(e){log('err','Narrative error: '+e.message);}
+  $('narr-ic').className='';$('narr-ic').textContent='⟳';$('btn-narr').disabled=false;
+}
+
+function renderNarr(){
+  const list=$('narr-list');
+  if(!S.narratives.length){list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Không có dữ liệu</div>';return;}
+  list.innerHTML=S.narratives.map(n=>`
+    <div class="db">
+      <div class="db-title"><span>${esc(n.name)}</span>
+        <div>${[1,2,3,4,5].map(i=>`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${i<=n.heat?'var(--accent)':'var(--border2)'};margin-right:2px"></span>`).join('')}</div>
+      </div>
+      <div class="db-body">${esc(n.description)}</div>
+      ${n.catalyst?`<div style="margin-top:6px;font-size:11px;color:var(--green)">🔑 ${esc(n.catalyst)}</div>`:''}
+      ${n.risk?`<div style="margin-top:3px;font-size:11px;color:var(--red)">⚠ ${esc(n.risk)}</div>`:''}
+      <div class="tag-row">${(n.coins||[]).map(c=>`<span class="chip on">$${esc(c)}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+// ═══════ 4. AIRDROPS — AI web search ═══════
+async function fetchAir(){
+  $('air-ic').className='spin';$('btn-air').disabled=true;
+  log('info','AI fetching airdrops & pre-listings...');
+  const today=new Date().toLocaleDateString('vi-VN');
+  try{
+    const raw=await callOAI({webSearch:true,json:true,
+      system:`Crypto airdrop researcher. Today ${today}. Return ONLY valid JSON, no markdown.`,
+      user:`Search web for currently active crypto airdrops, testnets, pre-listing projects, gems with catalysts as of ${today}.
+Return JSON:
+{"projects":[{"name":"name","symbol":"TICKER","stage":"Testnet/Airdrop Active/Mainnet New/Pre-listing/Listed Gem","description":"2-3 sentences what it is and why interesting NOW","tasks":"what to do to qualify","narrative":"narrative category","hot":true,"deadline":"deadline if known else null","source":"where found"}]}
+Include 8-12 projects. Only currently active, not expired.`
+    });
+    let parsed;
+    try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+    catch{parsed={projects:[]};}
+    S.airdrops=parsed.projects||[];
+    renderAir();
+    log('ok','Fetched '+S.airdrops.length+' airdrop projects');
+  }catch(e){log('err','Airdrop error: '+e.message);}
+  $('air-ic').className='';$('air-ic').textContent='⟳';$('btn-air').disabled=false;
+}
+
+function renderAir(){
+  const list=$('air-list');
+  if(!S.airdrops.length){list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Không có dữ liệu</div>';return;}
+  list.innerHTML=S.airdrops.map(a=>`
+    <div class="db" style="border-left:3px solid ${a.hot?'var(--green)':'var(--border2)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+        <div><span style="font-family:var(--mono);font-weight:600">$${esc(a.symbol||'?')}</span> <span style="font-size:12px;color:var(--text2)">${esc(a.name)}</span></div>
+        <div style="display:flex;gap:4px">${a.hot?'<span class="badge hot" style="font-size:8px">HOT</span>':''}<span class="badge air">${esc(a.stage)}</span></div>
+      </div>
+      <div class="db-body">${esc(a.description)}</div>
+      ${a.tasks?`<div style="margin-top:6px;font-size:11px;color:var(--accent)">📋 ${esc(a.tasks)}</div>`:''}
+      ${a.deadline?`<div style="margin-top:3px;font-size:11px;color:var(--red)">⏰ ${esc(a.deadline)}</div>`:''}
+      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+        <span class="badge narr" style="font-size:8px">${esc(a.narrative||'')}</span>
+        ${a.source?`<span style="font-size:9px;font-family:var(--mono);color:var(--text3)">src: ${esc(a.source)}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════ 5. FULL SCAN ═══════
+async function fullScan(){
+  showOv('ĐANG QUÉT TOÀN BỘ','Bước 1/4: Fetch giá real-time từ CoinGecko...',10);
+  log('info','=== FULL SCAN START ===');
+  try{
+    await fetchMkt();
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 2/4: AI search funding rates, whale moves, drama...',35);
+    await fetchIntel();
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 3/4: AI search narratives đang trending...',65);
+    await fetchNarr();
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 4/4: AI search airdrop & pre-listing projects...',88);
+    await fetchAir();
+    showOv('HOÀN THÀNH ✓','Tất cả dữ liệu đã được cập nhật real-time!',100);
+    log('ok','=== FULL SCAN DONE ===');
+    setTimeout(hideOv,1800);
+  }catch(e){log('err','Full scan error: '+e.message);hideOv();}
+}
+
+// ═══════ 6. PICK TOPIC ═══════
+function pickTopic(){
+  const s=+$('r-spot').value,f=+$('r-fut').value,n=+$('r-narr').value,a=+$('r-air').value;
+  const o=Math.max(0,100-s-f-n-a),r=Math.random()*100;
+  if(r<a&&S.airdrops.length){const hot=S.airdrops.filter(x=>x.hot);return{type:'airdrop',data:(hot.length?hot:S.airdrops)[Math.floor(Math.random()*Math.min((hot.length||S.airdrops.length),8))]};}
+  if(r<a+n&&S.narratives.length){const hot=S.narratives.filter(x=>x.heat>=4);return{type:'narrative',data:(hot.length?hot:S.narratives)[Math.floor(Math.random()*Math.min((hot.length||S.narratives.length),8))]};}
+  if(r<a+n+o&&S.coins.length){const pool=S.coins.filter(c=>c.type==='off-chain');return{type:'offchain',data:(pool.length?pool:S.coins.slice(0,10))[Math.floor(Math.random()*Math.min(pool.length||10,8))]};}
+  if(S.coins.length){
+    const pool=S.coins.filter(c=>c.type===(r<a+n+o+f?'futures':'spot'));
+    const drama=pool.filter(c=>c.drama);
+    return{type:r<a+n+o+f?'futures':'spot',data:(drama.length?drama:pool)[Math.floor(Math.random()*Math.min((drama.length||pool.length),12))]};
+  }
+  return{type:'narrative',data:{name:'Bitcoin Ecosystem',description:'BTC market structure',coins:['BTC'],heat:5,catalyst:S.intel.drama||'Price action'}};
+}
+
+// ═══════ 7. BUILD PROMPT ═══════
+function buildPrompt(topic){
+  const lang=$('lang').value,plen=$('plen').value,tone=$('tone').value,custom=$('custom').value.trim();
+  const langMap={vi:'Vietnamese',en:'English',bilingual:'Vietnamese first, English below each paragraph'};
+  const lenMap={short:'100–160 words',medium:'260–330 words',long:'460–560 words'};
+  const toneMap={
+    drama:'Dramatic, FOMO-inducing, urgent. Open with a killer hook. Crypto Twitter energy.',
+    analytical:'Data-driven, analytical. Lead with a key number/anomaly. Professional trader voice.',
+    educational:'Clear, educational, explain WHY with analogies. Good for all levels.',
+    alpha:'Alpha-hunter. "Not many watching this." On-chain forward-looking signals.',
+    thread:'Thread format: 1/ 2/ 3/ — each tweet self-contained and punchy.',
+    degen:'Degen CT voice. Casual, meme-aware but genuinely informative.',
+  };
+  const extras=[];
+  if($('i-oc').checked) extras.push('Weave in on-chain signals from the live data provided (whale moves, exchange flows, TVL)');
+  if($('i-sent').checked) extras.push('Include funding rate/sentiment context from the live data');
+  if($('i-ta').checked) extras.push('Add brief TA context — key levels to watch, no specific price targets');
+  if($('i-mac').checked) extras.push('Connect briefly to macro (DXY, BTC dominance, risk-on/off)');
+  if($('i-risk').checked) extras.push('Close with natural risk disclaimer (DYOR, not financial advice)');
+
+  // Live context injected into every post
+  const liveCtx=[
+    S.intel.drama?`CURRENT DRAMA/NEWS: ${S.intel.drama}`:'',
+    S.intel.funding?`FUNDING/OI: ${S.intel.funding.substring(0,280)}`:'',
+    S.intel.whale?`WHALE ACTIVITY: ${S.intel.whale.substring(0,280)}`:'',
+    S.narratives.length?`HOT NARRATIVES NOW: ${S.narratives.slice(0,3).map(n=>n.name+' (catalyst: '+n.catalyst+')').join('; ')}`:'',
+  ].filter(Boolean).join('\n');
+
+  let topicCtx='';
+  if(topic.type==='airdrop'){
+    const a=topic.data||{};
+    topicCtx=`PROJECT: ${a.name} ($${a.symbol||'?'})
+Stage: ${a.stage} | Hot: ${a.hot?'YES':'moderate'}
+What it is: ${a.description}
+How to participate: ${a.tasks}
+Narrative: ${a.narrative}${a.deadline?'\nDeadline: '+a.deadline:''}
+Write: WHY it matters NOW, how to qualify, honest risk vs reward. Be specific.`;
+  } else if(topic.type==='narrative'){
+    const n=topic.data||{};
+    topicCtx=`NARRATIVE: ${n.name}
+What's happening: ${n.description}
+Key catalyst TODAY: ${n.catalyst||'momentum building'}
+Coins in play: ${(n.coins||[]).map(c=>'$'+c).join(', ')}
+Risk: ${n.risk||'rotation risk'}
+Write: why moving NOW, best positioned coins, entry timing.`;
+  } else {
+    const c=topic.data||{};
+    const chg=(c.change||0).toFixed(2);
+    const ai=S.intel.dramaCoins.find(d=>d.symbol===c.symbol);
+    topicCtx=`COIN: $${c.symbol} (${c.name})
+Price: $${fmtP(c.price)} | 24h: ${parseFloat(chg)>=0?'+':''}${chg}%
+Volume: $${fmtV(c.volume)} | Type: ${c.type}
+Narrative: ${c.narrative||ai?.narrative||'General market'}
+Live signal: ${ai?.signal||c.dramaLabel||'price action'}
+Write: what's driving this, what to watch next, structural shift vs noise.`;
+  }
+
+  const system=`You are a top-tier crypto analyst and social media content creator.
+
+Tone: ${toneMap[tone]}
+Language: ${langMap[lang]}
+Length: ${lenMap[plen]}
+
+LIVE MARKET DATA (real-time, fetched just now — use to make post timely):
+${liveCtx||'No live data yet — write based on topic data provided.'}
+
+CRITICAL RULES:
+- NEVER mention any exchange name (Binance, Coinbase, OKX, Bybit, Kraken, etc.)
+- NEVER use exchange-branded hashtags
+- Platform-neutral content — focus on ASSET/NARRATIVE only
+- Hashtags: $TICKER format + topical tags (#Bitcoin #Crypto #DeFi #Web3 #Altcoin #Airdrop #DePIN #RWA #BTCfi #AIcrypto etc.) — MAX 6 total
+- Sound human, not AI-generated
+- Vary opening hooks — NEVER start with "So," / "Let me explain" / "In the world of"
+- ONE main insight per post — don't try to cover everything
+- No specific buy/sell price recommendations${extras.length?'\n\nExtra requirements:\n'+extras.map(e=>'- '+e).join('\n'):''}${custom?'\n\nOperator instructions: '+custom:''}`;
+
+  return{system,user:`Write a crypto social post about:\n\n${topicCtx}\n\nReturn ONLY the post + hashtags. Nothing else.`};
+}
+
+// ═══════ 8. GENERATE ═══════
+async function genPost(topic){
+  const{system,user}=buildPrompt(topic);
+  return await callOAI({system,user,webSearch:false});
+}
+
+// ═══════ 9. POST TO PLATFORM ═══════
+async function postTo(content){
+  const p=$('platform').value;
+  if(p==='preview') return{ok:true,id:'PREVIEW_'+Date.now(),sim:true};
+  if(p==='telegram'){
+    const tok=$('tg-tok').value.trim(),ch=$('tg-ch').value.trim();
+    if(!tok||!ch) throw new Error('Thiếu Telegram bot token / channel ID');
+    const r=await fetch(`https://api.telegram.org/bot${tok}/sendMessage`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:ch,text:content})
+    });
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.description||'Telegram error');
+    return{ok:true,id:'TG_'+d.result.message_id};
+  }
+  log('warn','['+p+'] Backend HMAC signing needed. Simulated.');
+  return{ok:true,id:p.toUpperCase()+'_'+Date.now(),sim:true};
+}
+
+// ═══════ 10. MAIN CYCLE ═══════
+async function runCycle(doPost=true){
+  log('info','── New cycle ──');
+  await fetchMkt();
+  // Refresh AI intel every 3 cycles to save API calls
+  if(S.posted%3===0||!S.intel.drama){
+    await fetchIntel();
+    if(!S.narratives.length) await fetchNarr();
+    if(!S.airdrops.length) await fetchAir();
+  }
+  const topic=pickTopic();
+  log('info','Topic: ['+topic.type+'] '+(topic.data?.name||topic.data?.symbol||'?'));
+  log('info','Generating post...');
+  let content;
+  try{content=await genPost(topic);log('ok','Generated ('+content.length+' chars)');}
+  catch(e){log('err','Generate error: '+e.message);return;}
+  showPreview(content,topic);
+  if(doPost){
+    try{
+      const res=await postTo(content);
+      if(res.ok){S.posted++;$('m-post').textContent=S.posted;log('ok','✓ Posted #'+S.posted+' — '+res.id+(res.sim?' [SIM]':''));addHist(content,topic,res.id);}
+    }catch(e){log('err','Post error: '+e.message);}
   }
 }
 
-function addToHistory(content, coin, type, postId) {
-  const el = document.getElementById('history-list');
-  if (el.querySelector('[data-empty]')) el.innerHTML = '';
-
-  const item = document.createElement('div');
-  item.className = 'post-card';
-  item.style.marginBottom = '12px';
-  const typeLabels = { spot:'SPOT', futures:'FUTURES', narrative:'NARRATIVE', 'pre-listing':'PRE-LISTING' };
-  item.innerHTML = `
-    <div class="post-meta">
-      <span class="badge ${type === 'narrative' ? 'trend' : type === 'pre-listing' ? 'pre-listing' : type === 'futures' ? 'futures' : 'spot'}">${typeLabels[type]||type}</span>
-      <span class="badge off-chain">$${coin.symbol}</span>
-      <span class="post-time">${new Date().toLocaleString('vi-VN')} — ${postId}</span>
-      <button class="btn copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(content)});addLog('ok','Copied!')">📋 Copy</button>
-    </div>
-    <div class="post-body" style="max-height:80px;overflow:hidden;">${escHtml(content.substring(0,250))}${content.length>250?'..':''}</div>`;
-  el.prepend(item);
+// ═══════ UI ═══════
+function showPreview(content,topic){
+  const cm={airdrop:'var(--green)',narrative:'var(--purple)',offchain:'var(--accent)',futures:'var(--purple)',spot:'var(--blue)'};
+  const lm={airdrop:'AIRDROP',narrative:'NARRATIVE',offchain:'OFF-CHAIN',futures:'FUTURES',spot:'SPOT'};
+  const color=cm[topic.type]||'var(--accent)',label=lm[topic.type]||'POST',name=topic.data?.name||topic.data?.symbol||'?';
+  $('prev-empty').style.display='none';$('prev-content').style.display='block';
+  $('prev-content').innerHTML=`<div class="post-card"><div class="post-meta"><span class="badge" style="background:rgba(0,0,0,.2);color:${color};border:1px solid ${color}40;font-size:9px">${label}</span><span class="badge spot" style="font-size:9px">${esc(name)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${new Date().toLocaleString('vi-VN')}</span></div><div class="post-body">${esc(content)}</div></div>`;
+  st('preview');
+}
+function addHist(content,topic,id){
+  const el=$('hist-list');
+  if(el.children[0]?.textContent?.includes('Chưa có')) el.innerHTML='';
+  const div=document.createElement('div');div.className='post-card';
+  div.innerHTML=`<div class="post-meta"><span class="badge spot" style="font-size:9px">${esc(topic.data?.symbol||topic.data?.name||topic.type)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${new Date().toLocaleString('vi-VN')} — ${id}</span></div><div class="post-body" style="max-height:80px;overflow:hidden">${esc(content.substring(0,280))}${content.length>280?'...':''}</div>`;
+  el.prepend(div);
 }
 
-function addLog(type, msg) {
-  const wrap = document.getElementById('log-wrap');
-  const ts = new Date().toLocaleTimeString('vi-VN');
-  const cls = { ok:'log-ok', err:'log-err', info:'log-info', warn:'log-warn' }[type] || 'log-info';
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  line.innerHTML = `<span class="log-ts">${ts}</span><span class="${cls}">${escHtml(msg)}</span>`;
-  wrap.appendChild(line);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-function clearLog() { document.getElementById('log-wrap').innerHTML = ''; }
-
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function switchTab(name) {
-  const names = ['market','trends','prelisting','sources','preview','log','history'];
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', names[i] === name));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
-}
-
-function formatPrice(p) {
-  if (!p) return '0';
-  if (p > 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 0});
-  if (p > 1) return p.toFixed(2);
-  return p.toFixed(6);
-}
-function formatVol(v) {
-  if (!v) return '0';
-  if (v > 1e9) return (v/1e9).toFixed(2)+'B';
-  if (v > 1e6) return (v/1e6).toFixed(1)+'M';
-  if (v > 1e3) return (v/1e3).toFixed(0)+'K';
-  return String(v);
-}
-
-// ═══════════════════════════════════════════
-//  COUNTDOWN
-// ═══════════════════════════════════════════
-function startCountdown() {
-  if (state.countdownTimer) clearInterval(state.countdownTimer);
-  state.countdownTimer = setInterval(() => {
-    if (!state.nextRun) return;
-    const diff = state.nextRun - Date.now();
-    if (diff <= 0) { document.getElementById('m-countdown').textContent = '00:00'; return; }
-    const m = Math.floor(diff/60000).toString().padStart(2,'0');
-    const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-    document.getElementById('m-countdown').textContent = m + ':' + s;
-    document.getElementById('next-label').textContent = 'Đăng lúc ' + new Date(state.nextRun).toLocaleTimeString('vi-VN');
-  }, 1000);
-}
-
-// ═══════════════════════════════════════════
-//  BOT CONTROL
-// ═══════════════════════════════════════════
-async function startBot() {
-  state.running = true;
-  document.getElementById('btn-start').disabled = true;
-  document.getElementById('btn-stop').disabled = false;
-  document.getElementById('status-pill').className = 'status-pill running';
-  document.getElementById('status-text').textContent = 'RUNNING';
-  addLog('ok', '🚀 Bot bắt đầu chạy!');
-
-  const intervalMs = (parseInt(document.getElementById('interval').value) || 30) * 60 * 1000;
-
+// ═══════ BOT CONTROL ═══════
+async function startBot(){
+  S.running=true;$('btn-start').disabled=true;$('btn-stop').disabled=false;
+  $('spill').className='status-pill running';$('stext').textContent='RUNNING';
+  log('ok','Bot started!');
+  const ms=+$('interval').value*60000;
   await runCycle(true);
-
-  state.timer = setInterval(async () => {
-    if (!state.running) return;
-    await runCycle(true);
-    state.nextRun = Date.now() + intervalMs;
-  }, intervalMs);
-
-  state.nextRun = Date.now() + intervalMs;
-  startCountdown();
+  S.timer=setInterval(async()=>{if(!S.running)return;S.nextRun=Date.now()+ms;await runCycle(true);},ms);
+  S.nextRun=Date.now()+ms;startCD();
 }
-
-function stopBot() {
-  state.running = false;
-  if (state.timer) clearInterval(state.timer);
-  if (state.countdownTimer) clearInterval(state.countdownTimer);
-  state.nextRun = null;
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('btn-stop').disabled = true;
-  document.getElementById('status-pill').className = 'status-pill';
-  document.getElementById('status-text').textContent = 'STOPPED';
-  document.getElementById('m-countdown').textContent = '—';
-  document.getElementById('next-label').textContent = '—';
-  addLog('warn', '■ Bot đã dừng.');
+function stopBot(){
+  S.running=false;clearInterval(S.timer);clearInterval(S.cdt);S.nextRun=null;
+  $('btn-start').disabled=false;$('btn-stop').disabled=true;
+  $('spill').className='status-pill';$('stext').textContent='STOPPED';
+  $('m-cd').textContent='—';$('next-label').textContent='—';
+  log('warn','Bot stopped.');
 }
-
-async function runOnce() {
-  addLog('info', 'Chạy thủ công 1 lần...');
-  await runCycle(true);
+async function runOnce(){log('info','Manual run...');await runCycle(true);}
+async function previewOnly(){
+  log('info','Preview...');
+  if(!S.coins.length) await fetchMkt();
+  const topic=pickTopic();
+  try{const c=await genPost(topic);showPreview(c,topic);log('ok','Preview: '+topic.type);}
+  catch(e){log('err',e.message);}
 }
-
-async function previewOnly() {
-  addLog('info', 'Preview mode...');
-  if (!state.marketData.length) await fetchMarket();
-  if (!state.marketData.length) { addLog('err', 'Không có dữ liệu'); return; }
-  const { type, coin, preItem, narrative } = pickTopicForPost();
-  try {
-    const content = await generatePost(coin, type, preItem, narrative);
-    const displayCoin = coin || (preItem ? { symbol: preItem.symbol, name: preItem.name, change24: 0 } : { symbol: '?', name: '?', change24: 0 });
-    showPreview(content, displayCoin, type);
-    addLog('ok', `Preview: ${type} ${displayCoin.symbol}`);
-  } catch(e) {
-    addLog('err', e.message);
-  }
+function startCD(){
+  if(S.cdt) clearInterval(S.cdt);
+  S.cdt=setInterval(()=>{
+    if(!S.nextRun)return;
+    const d=S.nextRun-Date.now();
+    if(d<=0){$('m-cd').textContent='00:00';return;}
+    const m=Math.floor(d/60000).toString().padStart(2,'0'),sec=Math.floor((d%60000)/1000).toString().padStart(2,'0');
+    $('m-cd').textContent=m+':'+sec;
+    $('next-label').textContent='Next: '+new Date(S.nextRun).toLocaleTimeString('vi-VN');
+  },1000);
 }
-
-async function previewOnlyCoin(coin, type) {
-  try {
-    const content = await generatePost(coin, type, null, null);
-    showPreview(content, coin, type);
-    addLog('ok', `Preview $${coin.symbol} xong`);
-  } catch(e) {
-    addLog('err', e.message);
-  }
-}
-
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
-refreshNarratives();
-renderPreListing();
-renderSources();
-document.getElementById('m-trends').textContent = NARRATIVES.length;
 </script>
 </body>
 </html>
