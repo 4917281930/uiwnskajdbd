@@ -13,17 +13,19 @@
   --accent:#f0b90b;--accent2:#d4a00a;
   --green:#0ecb81;--red:#f6465d;--blue:#1e88e5;--purple:#7b61ff;--orange:#ff8c00;
   --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
-  --sidebar:300px;
+  --sidebar-w:300px;
+  --topbar-h:52px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;}
+html{height:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;height:100%;overflow-x:hidden;}
 
 /* ── TOPBAR ── */
 .topbar{
   background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:0 1rem;height:52px;display:flex;align-items:center;
-  justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:0 1rem;height:var(--topbar-h);display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;left:0;right:0;z-index:200;
+  flex-shrink:0;
 }
 .logo{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.03em;}
 .logo-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
@@ -34,44 +36,76 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 .status-pill.running .status-dot{animation:pulse 1.2s ease-in-out infinite;}
 
-/* ── VIEW TOGGLE (desktop/tablet/mobile/fullscreen) ── */
+/* ── VIEW TOGGLE ── */
 .view-btns{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px;}
 .vbtn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 7px;border-radius:4px;font-size:11px;transition:all .15s;line-height:1;}
 .vbtn:hover{color:var(--text2);}
 .vbtn.active{background:var(--bg4);color:var(--accent);}
 
-/* ── HAMBURGER (mobile) ── */
+/* ── HAMBURGER ── */
 .hamburger{display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text2);cursor:pointer;font-size:14px;}
 
-/* ── LAYOUT ── */
-.app{display:flex;position:fixed;top:52px;left:0;right:0;bottom:0;}
+/* ── ROOT WRAPPER — full viewport minus topbar ── */
+.app-root{
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - var(--topbar-h));
+  overflow:hidden;
+}
+
+/* ── APP (sidebar + main) ── */
+.app{
+  display:flex;
+  flex:1;
+  overflow:hidden;
+  position:relative;
+}
 
 /* ── SIDEBAR ── */
 .sidebar{
-  width:var(--sidebar);min-width:var(--sidebar);
-  background:var(--bg2);border-right:1px solid var(--border);
-  overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;
-  transition:transform .25s ease,width .25s ease;
+  width:var(--sidebar-w);
+  min-width:var(--sidebar-w);
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+  flex-shrink:0;
+  transition:transform .25s ease,width .25s ease,min-width .25s ease;
   z-index:100;
+  height:100%;
 }
-.sidebar.collapsed{transform:translateX(-100%);position:absolute;height:100%;}
-.sidebar-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar.hidden{
+  transform:translateX(-100%);
+  position:absolute;
+  height:100%;
+  width:var(--sidebar-w) !important;
+  min-width:var(--sidebar-w) !important;
+}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sidebar-overlay{
+  display:none;
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:99;
+}
 .sidebar-overlay.show{display:block;}
 
 /* ── MAIN ── */
-.main{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;min-width:0;}
-
-/* ── VIEW MODES ── */
-body.view-desktop{--sidebar:300px;}
-body.view-tablet .sidebar{width:240px;min-width:240px;}
-body.view-tablet .main{padding:.75rem;}
-body.view-mobile .app{flex-direction:column;}
-body.view-mobile .sidebar{width:100%!important;min-width:unset;border-right:none;border-bottom:1px solid var(--border);max-height:45vh;position:relative;}
-body.view-mobile .main{padding:.5rem;}
-body.view-mobile .metrics{grid-template-columns:repeat(2,1fr)!important;}
-body.view-mobile .mkt-table{font-size:10px;}
-body.view-fullscreen .sidebar{display:none;}
-body.view-fullscreen .main{padding:1.25rem;}
+.main{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+  min-width:0;
+}
 
 /* ── CARDS ── */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;}
@@ -191,25 +225,87 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 /* ── FILTER ROW ── */
 .filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
 
-/* ── RESPONSIVE ── */
-@media(max-width:900px){
+/* ══════════════════════════════════
+   VIEW MODES
+══════════════════════════════════ */
+
+/* TABLET */
+body.view-tablet .sidebar{
+  width:240px;
+  min-width:240px;
+}
+
+/* MOBILE — stacked layout */
+body.view-mobile .app{
+  flex-direction:column;
+  overflow:visible;
+}
+body.view-mobile .app-root{
+  height:auto;
+  overflow:visible;
+}
+body.view-mobile .sidebar{
+  width:100% !important;
+  min-width:unset !important;
+  height:auto;
+  max-height:50vh;
+  border-right:none;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  transform:none !important;
+  overflow-y:auto;
+}
+body.view-mobile .main{
+  padding:.625rem;
+  overflow:visible;
+  height:auto;
+}
+body.view-mobile .metrics{grid-template-columns:repeat(2,1fr)!important;}
+body.view-mobile .mkt-table{font-size:10px;}
+body.view-mobile .post-body{font-size:12px;}
+
+/* FULLSCREEN — hide sidebar */
+body.view-fullscreen .sidebar{
+  display:none;
+}
+body.view-fullscreen .main{
+  padding:1.25rem;
+}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media(max-width:1024px){
   .metrics{grid-template-columns:repeat(2,1fr);}
-  body:not(.view-desktop) .sidebar{width:240px;min-width:240px;}
+}
+@media(max-width:900px){
+  :root{--sidebar-w:240px;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:640px){
   .hamburger{display:block;}
   .view-btns{display:none;}
-  .sidebar{position:absolute;height:100%;transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
+  /* On small screens, sidebar is hidden until opened via hamburger */
+  body:not(.view-mobile) .sidebar{
+    position:absolute;
+    height:100%;
+    transform:translateX(-100%);
+  }
+  body:not(.view-mobile) .sidebar.open{
+    transform:translateX(0);
+  }
+  body:not(.view-mobile) .sidebar-overlay{
+    display:none;
+  }
+  body:not(.view-mobile) .sidebar.open ~ .sidebar-overlay,
+  .sidebar-overlay.show{
+    display:block;
+  }
   .metrics{grid-template-columns:repeat(2,1fr);}
   body{font-size:13px;}
   .main{padding:.625rem;}
   .post-body{font-size:12px;}
   .mkt-table{font-size:10px;}
   .mkt-table .hide-mobile{display:none;}
-}
-@media(min-width:641px){
-  .sidebar-overlay{display:none!important;}
+  .topbar .hide-xs{display:none!important;}
 }
 </style>
 </head>
@@ -223,9 +319,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   <div class="ov-step" id="ov-step">Khởi động...</div>
 </div>
 
-<!-- SIDEBAR OVERLAY (mobile) -->
-<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
-
 <!-- TOPBAR -->
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:8px;">
@@ -233,8 +326,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
     <div class="logo"><div class="logo-dot"></div><span>CRYPTO AUTO POST PRO</span></div>
   </div>
   <div class="topbar-right">
-    <span style="font-family:var(--mono);font-size:10px;color:var(--text3);display:none;" id="next-label" class="hide-xs">—</span>
-    <!-- VIEW SWITCHER -->
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="next-label" class="hide-xs">—</span>
     <div class="view-btns" title="Chọn giao diện">
       <button class="vbtn active" onclick="setView('desktop')" title="Desktop">🖥</button>
       <button class="vbtn" onclick="setView('tablet')" title="Tablet">📱</button>
@@ -245,217 +337,222 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   </div>
 </div>
 
-<!-- APP -->
-<div class="app" id="app">
+<!-- APP ROOT -->
+<div class="app-root">
+  <div class="app" id="app">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
+    <!-- SIDEBAR OVERLAY (mobile hamburger) -->
+    <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 
-    <div class="card">
-      <div class="card-title">⚙ Cấu hình API</div>
-      <label>OpenAI API Key <span style="color:var(--red)">*</span></label>
-      <input type="password" id="oai-key" placeholder="sk-..." autocomplete="off"/>
-      <div class="hint">Dùng cho generate bài + AI web search real-time</div>
-      <div class="sep"></div>
-      <label>Nền tảng đăng bài</label>
-      <select id="platform" onchange="switchPlat()">
-        <option value="preview">Preview Only</option>
-        <option value="telegram">Telegram Channel</option>
-        <option value="binance">Binance Square</option>
-      </select>
-      <div id="tg-f" style="display:none">
-        <label>Bot Token</label><input type="password" id="tg-tok" placeholder="123456:ABC..."/>
-        <label>Channel ID</label><input type="text" id="tg-ch" placeholder="@channel hoặc -100xxx"/>
-      </div>
-      <div id="bn-f" style="display:none">
-        <label>Binance API Key</label><input type="password" id="bn-key"/>
-        <label>Binance Secret</label><input type="password" id="bn-sec"/>
-        <div class="hint">⚠ Cần backend HMAC để đăng thật</div>
-      </div>
-    </div>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
 
-    <div class="card">
-      <div class="card-title">⏱ Lịch đăng bài</div>
-      <label>Chu kỳ (phút)</label>
-      <input type="number" id="interval" value="30" min="5" max="1440"/>
-      <div class="sep"></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:8px;">TỈ LỆ NỘI DUNG</div>
-      <div class="tr"><span style="font-size:11px;color:var(--text2);">Spot drama</span><span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="p-spot">20%</span></div>
-      <input type="range" id="r-spot" min="0" max="60" value="20"/>
-      <div class="tr"><span style="font-size:11px;color:var(--text2);">Futures/Perp</span><span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="p-fut">15%</span></div>
-      <input type="range" id="r-fut" min="0" max="60" value="15"/>
-      <div class="tr"><span style="font-size:11px;color:var(--text2);">Narrative/Sector</span><span style="font-family:var(--mono);font-size:11px;color:#9c27b0" id="p-narr">25%</span></div>
-      <input type="range" id="r-narr" min="0" max="60" value="25"/>
-      <div class="tr"><span style="font-size:11px;color:var(--text2);">Airdrop/Pre-listing</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="p-air">20%</span></div>
-      <input type="range" id="r-air" min="0" max="50" value="20"/>
-      <div class="tr"><span style="font-size:11px;color:var(--text2);">Off-chain/Non-listed</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="p-off">20%</span></div>
-      <div class="ratio-bar">
-        <div class="ratio-seg" id="rs-s" style="background:var(--blue);width:20%"></div>
-        <div class="ratio-seg" id="rs-f" style="background:var(--purple);width:15%"></div>
-        <div class="ratio-seg" id="rs-n" style="background:#9c27b0;width:25%"></div>
-        <div class="ratio-seg" id="rs-a" style="background:var(--green);width:20%"></div>
-        <div class="ratio-seg" id="rs-o" style="background:var(--accent);width:20%"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">✍ Cài đặt bài viết</div>
-      <label>Ngôn ngữ bài viết</label>
-      <select id="lang">
-        <option value="vi" selected>🇻🇳 Tiếng Việt (bắt buộc)</option>
-        <option value="en">🇺🇸 English</option>
-        <option value="bilingual">🌐 Song ngữ VI/EN</option>
-      </select>
-      <div class="hint" id="lang-hint" style="color:var(--green)">✓ Bài viết sẽ 100% Tiếng Việt</div>
-      <label>Độ dài</label>
-      <select id="plen"><option value="short">Ngắn ~150 từ</option><option value="medium" selected>Vừa ~300 từ</option><option value="long">Dài ~500 từ</option></select>
-      <label>Tone giọng văn</label>
-      <select id="tone">
-        <option value="drama" selected>Drama / FOMO</option>
-        <option value="analytical">Phân tích chuyên sâu</option>
-        <option value="educational">Giáo dục / Tutorial</option>
-        <option value="alpha">Alpha / Insider tips</option>
-        <option value="thread">Thread 1/n</option>
-        <option value="degen">Degen CT style</option>
-      </select>
-      <label style="margin-top:10px;">Nội dung bổ sung</label>
-      <label class="checkbox-row"><input type="checkbox" id="i-oc" checked> On-chain signals</label>
-      <label class="checkbox-row"><input type="checkbox" id="i-sent" checked> Market sentiment</label>
-      <label class="checkbox-row"><input type="checkbox" id="i-ta" checked> Technical hints</label>
-      <label class="checkbox-row"><input type="checkbox" id="i-mac"> Macro context</label>
-      <label class="checkbox-row"><input type="checkbox" id="i-risk" checked> Disclaimer DYOR</label>
-      <label style="margin-top:10px;">Hướng dẫn thêm</label>
-      <textarea id="custom" placeholder="VD: Luôn đề cập risk/reward..."></textarea>
-      <label>Blacklist coins</label>
-      <input type="text" id="blist" placeholder="LUNA, FTT, SQUID..."/>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🎮 Điều khiển</div>
-      <div class="btn-row">
-        <button class="btn accent" id="btn-start" onclick="startBot()">▶ Bắt đầu</button>
-        <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Dừng</button>
-      </div>
-      <div class="btn-col">
-        <button class="btn" onclick="runOnce()">↻ Chạy 1 lần</button>
-        <button class="btn" onclick="previewOnly()">👁 Preview (không đăng)</button>
-        <button class="btn green" onclick="fullScan()">🔍 Full scan thị trường</button>
-      </div>
-    </div>
-
-  </div><!-- /sidebar -->
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <div class="metrics">
-      <div class="metric"><div class="metric-label">Bài đã đăng</div><div class="metric-val" style="color:var(--accent)" id="m-post">0</div><div class="metric-sub">tổng cộng</div></div>
-      <div class="metric"><div class="metric-label">Coins scanned</div><div class="metric-val" style="color:var(--green)" id="m-coins">0</div><div class="metric-sub">real-time</div></div>
-      <div class="metric"><div class="metric-label">Lần scan cuối</div><div class="metric-val" id="m-scan" style="font-size:13px;color:var(--text2)">—</div><div class="metric-sub">AI web search</div></div>
-      <div class="metric"><div class="metric-label">Đăng tiếp theo</div><div class="countdown" id="m-cd">—</div><div class="metric-sub">mm:ss</div></div>
-    </div>
-
-    <div class="card" style="padding:1rem;">
-      <div class="tabs">
-        <div class="tab active" onclick="st('market')">📈 Market</div>
-        <div class="tab" onclick="st('intel')">🧠 AI Intel</div>
-        <div class="tab" onclick="st('narratives')">🔥 Narratives</div>
-        <div class="tab" onclick="st('airdrops')">🪂 Airdrops</div>
-        <div class="tab" onclick="st('preview')">📝 Preview</div>
-        <div class="tab" onclick="st('log')">🖥 Log</div>
-        <div class="tab" onclick="st('history')">📚 Lịch sử</div>
-      </div>
-
-      <!-- MARKET -->
-      <div class="tab-panel active" id="tab-market">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px;">
-          <span style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="mkt-ts">Chưa quét</span>
-          <button class="btn" onclick="fetchMkt()" id="btn-mkt"><span id="mkt-ic">⟳</span> Quét giá</button>
+      <div class="card">
+        <div class="card-title">⚙ Cấu hình API</div>
+        <label>OpenAI API Key <span style="color:var(--red)">*</span></label>
+        <input type="password" id="oai-key" placeholder="sk-..." autocomplete="off"/>
+        <div class="hint">Dùng cho generate bài + AI web search real-time</div>
+        <div class="sep"></div>
+        <label>Nền tảng đăng bài</label>
+        <select id="platform" onchange="switchPlat()">
+          <option value="preview">Preview Only</option>
+          <option value="telegram">Telegram Channel</option>
+          <option value="binance">Binance Square</option>
+        </select>
+        <div id="tg-f" style="display:none">
+          <label>Bot Token</label><input type="password" id="tg-tok" placeholder="123456:ABC..."/>
+          <label>Channel ID</label><input type="text" id="tg-ch" placeholder="@channel hoặc -100xxx"/>
         </div>
-        <div class="filter-row">
-          <button class="btn" onclick="flt('all')" style="font-size:10px;padding:3px 9px">Tất cả</button>
-          <button class="btn" onclick="flt('drama')" style="font-size:10px;padding:3px 9px">🔥 Drama</button>
-          <button class="btn" onclick="flt('futures')" style="font-size:10px;padding:3px 9px">Futures</button>
-          <button class="btn" onclick="flt('off')" style="font-size:10px;padding:3px 9px">Off-chain</button>
-          <button class="btn" onclick="flt('gem')" style="font-size:10px;padding:3px 9px">💎 Gem</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="mkt-table">
-            <thead><tr>
-              <th>Coin</th><th>Loại</th>
-              <th>Giá</th><th>24h</th>
-              <th class="hide-mobile">Volume</th>
-              <th class="hide-mobile">Narrative</th>
-              <th>Signal</th>
-            </tr></thead>
-            <tbody id="mkt-body"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Nhấn "Quét giá" hoặc "Full scan" để tải dữ liệu</td></tr></tbody>
-          </table>
+        <div id="bn-f" style="display:none">
+          <label>Binance API Key</label><input type="password" id="bn-key"/>
+          <label>Binance Secret</label><input type="password" id="bn-sec"/>
+          <div class="hint">⚠ Cần backend HMAC để đăng thật</div>
         </div>
       </div>
 
-      <!-- AI INTEL -->
-      <div class="tab-panel" id="tab-intel">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AI WEB SEARCH INTEL — REAL-TIME</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI search web để lấy funding rates, whale moves, drama signals ngay lúc này</div>
+      <div class="card">
+        <div class="card-title">⏱ Lịch đăng bài</div>
+        <label>Chu kỳ (phút)</label>
+        <input type="number" id="interval" value="30" min="5" max="1440"/>
+        <div class="sep"></div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:8px;">TỈ LỆ NỘI DUNG</div>
+        <div class="tr"><span style="font-size:11px;color:var(--text2);">Spot drama</span><span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="p-spot">20%</span></div>
+        <input type="range" id="r-spot" min="0" max="60" value="20"/>
+        <div class="tr"><span style="font-size:11px;color:var(--text2);">Futures/Perp</span><span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="p-fut">15%</span></div>
+        <input type="range" id="r-fut" min="0" max="60" value="15"/>
+        <div class="tr"><span style="font-size:11px;color:var(--text2);">Narrative/Sector</span><span style="font-family:var(--mono);font-size:11px;color:#9c27b0" id="p-narr">25%</span></div>
+        <input type="range" id="r-narr" min="0" max="60" value="25"/>
+        <div class="tr"><span style="font-size:11px;color:var(--text2);">Airdrop/Pre-listing</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="p-air">20%</span></div>
+        <input type="range" id="r-air" min="0" max="50" value="20"/>
+        <div class="tr"><span style="font-size:11px;color:var(--text2);">Off-chain/Non-listed</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="p-off">20%</span></div>
+        <div class="ratio-bar">
+          <div class="ratio-seg" id="rs-s" style="background:var(--blue);width:20%"></div>
+          <div class="ratio-seg" id="rs-f" style="background:var(--purple);width:15%"></div>
+          <div class="ratio-seg" id="rs-n" style="background:#9c27b0;width:25%"></div>
+          <div class="ratio-seg" id="rs-a" style="background:var(--green);width:20%"></div>
+          <div class="ratio-seg" id="rs-o" style="background:var(--accent);width:20%"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✍ Cài đặt bài viết</div>
+        <label>Ngôn ngữ bài viết</label>
+        <select id="lang">
+          <option value="vi" selected>🇻🇳 Tiếng Việt (bắt buộc)</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="bilingual">🌐 Song ngữ VI/EN</option>
+        </select>
+        <div class="hint" id="lang-hint" style="color:var(--green)">✓ Bài viết sẽ 100% Tiếng Việt</div>
+        <label>Độ dài</label>
+        <select id="plen"><option value="short">Ngắn ~150 từ</option><option value="medium" selected>Vừa ~300 từ</option><option value="long">Dài ~500 từ</option></select>
+        <label>Tone giọng văn</label>
+        <select id="tone">
+          <option value="drama" selected>Drama / FOMO</option>
+          <option value="analytical">Phân tích chuyên sâu</option>
+          <option value="educational">Giáo dục / Tutorial</option>
+          <option value="alpha">Alpha / Insider tips</option>
+          <option value="thread">Thread 1/n</option>
+          <option value="degen">Degen CT style</option>
+        </select>
+        <label style="margin-top:10px;">Nội dung bổ sung</label>
+        <label class="checkbox-row"><input type="checkbox" id="i-oc" checked> On-chain signals</label>
+        <label class="checkbox-row"><input type="checkbox" id="i-sent" checked> Market sentiment</label>
+        <label class="checkbox-row"><input type="checkbox" id="i-ta" checked> Technical hints</label>
+        <label class="checkbox-row"><input type="checkbox" id="i-mac"> Macro context</label>
+        <label class="checkbox-row"><input type="checkbox" id="i-risk" checked> Disclaimer DYOR</label>
+        <label style="margin-top:10px;">Hướng dẫn thêm</label>
+        <textarea id="custom" placeholder="VD: Luôn đề cập risk/reward..."></textarea>
+        <label>Blacklist coins</label>
+        <input type="text" id="blist" placeholder="LUNA, FTT, SQUID..."/>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎮 Điều khiển</div>
+        <div class="btn-row">
+          <button class="btn accent" id="btn-start" onclick="startBot()">▶ Bắt đầu</button>
+          <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Dừng</button>
+        </div>
+        <div class="btn-col">
+          <button class="btn" onclick="runOnce()">↻ Chạy 1 lần</button>
+          <button class="btn" onclick="previewOnly()">👁 Preview (không đăng)</button>
+          <button class="btn green" onclick="fullScan()">🔍 Full scan thị trường</button>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Bài đã đăng</div><div class="metric-val" style="color:var(--accent)" id="m-post">0</div><div class="metric-sub">tổng cộng</div></div>
+        <div class="metric"><div class="metric-label">Coins scanned</div><div class="metric-val" style="color:var(--green)" id="m-coins">0</div><div class="metric-sub">real-time</div></div>
+        <div class="metric"><div class="metric-label">Lần scan cuối</div><div class="metric-val" id="m-scan" style="font-size:13px;color:var(--text2)">—</div><div class="metric-sub">AI web search</div></div>
+        <div class="metric"><div class="metric-label">Đăng tiếp theo</div><div class="countdown" id="m-cd">—</div><div class="metric-sub">mm:ss</div></div>
+      </div>
+
+      <div class="card" style="padding:1rem;">
+        <div class="tabs">
+          <div class="tab active" onclick="st('market')">📈 Market</div>
+          <div class="tab" onclick="st('intel')">🧠 AI Intel</div>
+          <div class="tab" onclick="st('narratives')">🔥 Narratives</div>
+          <div class="tab" onclick="st('airdrops')">🪂 Airdrops</div>
+          <div class="tab" onclick="st('preview')">📝 Preview</div>
+          <div class="tab" onclick="st('log')">🖥 Log</div>
+          <div class="tab" onclick="st('history')">📚 Lịch sử</div>
+        </div>
+
+        <!-- MARKET -->
+        <div class="tab-panel active" id="tab-market">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px;">
+            <span style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="mkt-ts">Chưa quét</span>
+            <button class="btn" onclick="fetchMkt()" id="btn-mkt"><span id="mkt-ic">⟳</span> Quét giá</button>
           </div>
-          <button class="btn" onclick="fetchIntel()" id="btn-intel"><span id="intel-ic">⟳</span> Scan ngay</button>
-        </div>
-        <div class="db"><div class="db-title">📊 Funding Rates &amp; Open Interest <span class="badge narr" style="font-size:8px" id="fund-ts">—</span></div><div class="db-body" id="fund-body">Chưa có dữ liệu — nhấn Scan ngay</div></div>
-        <div class="db"><div class="db-title">🐋 Whale Moves &amp; On-chain <span class="badge narr" style="font-size:8px" id="whale-ts">—</span></div><div class="db-body" id="whale-body">Chưa có dữ liệu</div></div>
-        <div class="db"><div class="db-title">⚡ Drama Signals &amp; Tin tức nóng <span class="badge hot" style="font-size:8px" id="drama-ts">—</span></div><div class="db-body" id="drama-body">Chưa có dữ liệu</div><div class="tag-row" id="drama-tags"></div></div>
-        <div class="db"><div class="db-title">📋 Danh sách Futures Coins (AI cập nhật) <span class="badge gem" style="font-size:8px" id="fut-ts">—</span></div><div class="tag-row" id="fut-tags"><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Chưa fetch</span></div></div>
-      </div>
-
-      <!-- NARRATIVES -->
-      <div class="tab-panel" id="tab-narratives">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">NARRATIVE RADAR — AI FETCHED REAL-TIME</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm narrative đang trending trên CT/Reddit hôm nay</div>
+          <div class="filter-row">
+            <button class="btn" onclick="flt('all')" style="font-size:10px;padding:3px 9px">Tất cả</button>
+            <button class="btn" onclick="flt('drama')" style="font-size:10px;padding:3px 9px">🔥 Drama</button>
+            <button class="btn" onclick="flt('futures')" style="font-size:10px;padding:3px 9px">Futures</button>
+            <button class="btn" onclick="flt('off')" style="font-size:10px;padding:3px 9px">Off-chain</button>
+            <button class="btn" onclick="flt('gem')" style="font-size:10px;padding:3px 9px">💎 Gem</button>
           </div>
-          <button class="btn" onclick="fetchNarr()" id="btn-narr"><span id="narr-ic">⟳</span> Fetch narratives</button>
-        </div>
-        <div id="narr-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm narrative đang hot</div></div>
-      </div>
-
-      <!-- AIRDROPS -->
-      <div class="tab-panel" id="tab-airdrops">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AIRDROP &amp; PRE-LISTING RADAR — AI FETCHED</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm dự án pre-listing, airdrop active hôm nay</div>
+          <div style="overflow-x:auto">
+            <table class="mkt-table">
+              <thead><tr>
+                <th>Coin</th><th>Loại</th>
+                <th>Giá</th><th>24h</th>
+                <th class="hide-mobile">Volume</th>
+                <th class="hide-mobile">Narrative</th>
+                <th>Signal</th>
+              </tr></thead>
+              <tbody id="mkt-body"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Nhấn "Quét giá" hoặc "Full scan" để tải dữ liệu</td></tr></tbody>
+            </table>
           </div>
-          <button class="btn" onclick="fetchAir()" id="btn-air"><span id="air-ic">⟳</span> Fetch airdrops</button>
         </div>
-        <div id="air-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm airdrop đang hot</div></div>
-      </div>
 
-      <!-- PREVIEW -->
-      <div class="tab-panel" id="tab-preview">
-        <div id="prev-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Preview hoặc chờ bot tạo bài viết</div>
-        <div id="prev-content" style="display:none"></div>
-      </div>
-
-      <!-- LOG -->
-      <div class="tab-panel" id="tab-log">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button class="btn" onclick="document.getElementById('log-w').innerHTML=''" style="font-size:10px;padding:3px 9px">✕ Xoá log</button>
+        <!-- AI INTEL -->
+        <div class="tab-panel" id="tab-intel">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AI WEB SEARCH INTEL — REAL-TIME</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">AI search web để lấy funding rates, whale moves, drama signals ngay lúc này</div>
+            </div>
+            <button class="btn" onclick="fetchIntel()" id="btn-intel"><span id="intel-ic">⟳</span> Scan ngay</button>
+          </div>
+          <div class="db"><div class="db-title">📊 Funding Rates &amp; Open Interest <span class="badge narr" style="font-size:8px" id="fund-ts">—</span></div><div class="db-body" id="fund-body">Chưa có dữ liệu — nhấn Scan ngay</div></div>
+          <div class="db"><div class="db-title">🐋 Whale Moves &amp; On-chain <span class="badge narr" style="font-size:8px" id="whale-ts">—</span></div><div class="db-body" id="whale-body">Chưa có dữ liệu</div></div>
+          <div class="db"><div class="db-title">⚡ Drama Signals &amp; Tin tức nóng <span class="badge hot" style="font-size:8px" id="drama-ts">—</span></div><div class="db-body" id="drama-body">Chưa có dữ liệu</div><div class="tag-row" id="drama-tags"></div></div>
+          <div class="db"><div class="db-title">📋 Danh sách Futures Coins (AI cập nhật) <span class="badge gem" style="font-size:8px" id="fut-ts">—</span></div><div class="tag-row" id="fut-tags"><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Chưa fetch</span></div></div>
         </div>
-        <div class="log-wrap" id="log-w">
-          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Crypto Auto Post Pro v2 — 100% real-time. Nhập OpenAI key → Full scan → Start Bot.</span></div>
+
+        <!-- NARRATIVES -->
+        <div class="tab-panel" id="tab-narratives">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">NARRATIVE RADAR — AI FETCHED REAL-TIME</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm narrative đang trending trên CT/Reddit hôm nay</div>
+            </div>
+            <button class="btn" onclick="fetchNarr()" id="btn-narr"><span id="narr-ic">⟳</span> Fetch narratives</button>
+          </div>
+          <div id="narr-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm narrative đang hot</div></div>
         </div>
-      </div>
 
-      <!-- HISTORY -->
-      <div class="tab-panel" id="tab-history">
-        <div id="hist-list"><div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Chưa có bài nào được đăng</div></div>
-      </div>
+        <!-- AIRDROPS -->
+        <div class="tab-panel" id="tab-airdrops">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AIRDROP &amp; PRE-LISTING RADAR — AI FETCHED</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm dự án pre-listing, airdrop active hôm nay</div>
+            </div>
+            <button class="btn" onclick="fetchAir()" id="btn-air"><span id="air-ic">⟳</span> Fetch airdrops</button>
+          </div>
+          <div id="air-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm airdrop đang hot</div></div>
+        </div>
 
-    </div><!-- /card -->
-  </div><!-- /main -->
-</div><!-- /app -->
+        <!-- PREVIEW -->
+        <div class="tab-panel" id="tab-preview">
+          <div id="prev-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Preview hoặc chờ bot tạo bài viết</div>
+          <div id="prev-content" style="display:none"></div>
+        </div>
+
+        <!-- LOG -->
+        <div class="tab-panel" id="tab-log">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+            <button class="btn" onclick="document.getElementById('log-w').innerHTML=''" style="font-size:10px;padding:3px 9px">✕ Xoá log</button>
+          </div>
+          <div class="log-wrap" id="log-w">
+            <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Crypto Auto Post Pro v2 — 100% real-time. Nhập OpenAI key → Full scan → Start Bot.</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="tab-panel" id="tab-history">
+          <div id="hist-list"><div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Chưa có bài nào được đăng</div></div>
+        </div>
+
+      </div><!-- /card -->
+    </div><!-- /main -->
+  </div><!-- /app -->
+</div><!-- /app-root -->
 
 <script>
 // ═══════════════ STATE ═══════════════
@@ -493,14 +590,21 @@ function setView(v){
   document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));
   const idx={desktop:0,tablet:1,mobile:2,fullscreen:3}[v];
   document.querySelectorAll('.vbtn')[idx]?.classList.add('active');
-  // close sidebar on fullscreen
-  if(v==='fullscreen') $('sidebar').classList.add('collapsed');
-  else $('sidebar').classList.remove('collapsed');
+  // Close sidebar on fullscreen; restore on others
+  const sb=$('sidebar');
+  if(v==='fullscreen'){
+    sb.classList.add('hidden');
+    sb.classList.remove('open');
+  } else {
+    sb.classList.remove('hidden');
+    sb.classList.remove('open');
+    $('sb-overlay').classList.remove('show');
+  }
 }
 
-// ── Mobile sidebar ──
+// ── Mobile sidebar (hamburger) ──
 function toggleSidebar(){
-  const sb=$('sidebar'), ov=$('sb-overlay');
+  const sb=$('sidebar'),ov=$('sb-overlay');
   const isOpen=sb.classList.contains('open');
   sb.classList.toggle('open',!isOpen);
   ov.classList.toggle('show',!isOpen);
@@ -537,21 +641,16 @@ function showOv(title,step,pct){$('ov').classList.add('show');$('ov-title').text
 function hideOv(){$('ov').classList.remove('show');}
 
 // ═══════════════ OPENAI CALL ═══════════════
-// webSearch=true  → gpt-4o-search-preview (tự search web, không cần tools param)
-// webSearch=false → gpt-4o thường để generate bài viết
 async function callOAI({system,user,webSearch=false}){
   const key=$('oai-key').value.trim();
   if(!key) throw new Error('Chưa nhập OpenAI API key');
-
   const model=webSearch?'gpt-4o-search-preview':'gpt-4o';
   const body={
     model,
     max_tokens:webSearch?1500:1200,
     messages:[{role:'system',content:system},{role:'user',content:user}],
   };
-  // gpt-4o-search-preview không hỗ trợ temperature
   if(!webSearch) body.temperature=0.88;
-
   const res=await fetch('https://api.openai.com/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
@@ -565,7 +664,7 @@ async function callOAI({system,user,webSearch=false}){
   return '';
 }
 
-// ═══════════════ 1. MARKET — CoinGecko ═══════════════
+// ═══════════════ 1. MARKET ═══════════════
 async function fetchMkt(){
   $('mkt-ic').className='spin';$('btn-mkt').disabled=true;
   log('info','Đang fetch CoinGecko top 100 + trending...');
@@ -633,13 +732,12 @@ function renderMkt(){
 }
 function flt(f){S.cf=f;renderMkt();}
 
-// ═══════════════ 2. AI INTEL — gpt-4o-search-preview ═══════════════
+// ═══════════════ 2. AI INTEL ═══════════════
 async function fetchIntel(){
   $('intel-ic').className='spin';$('btn-intel').disabled=true;
   log('info','AI đang search web: funding rates, whale moves, drama signals...');
   const today=new Date().toLocaleDateString('vi-VN');
   try{
-    // FUNDING
     log('info','[1/3] Funding rates & OI...');
     const funding=await callOAI({webSearch:true,
       system:`Bạn là chuyên gia phân tích thị trường crypto. Hôm nay là ${today}. QUAN TRỌNG: Trả lời HOÀN TOÀN bằng Tiếng Việt, không dùng tiếng Anh. Chỉ trả về văn bản thuần, không dùng markdown headers.`,
@@ -648,7 +746,6 @@ async function fetchIntel(){
     $('fund-body').textContent=funding;$('fund-ts').textContent=ts();S.intel.funding=funding;
     log('ok','Funding rates done');
 
-    // WHALE
     log('info','[2/3] Whale & on-chain...');
     const whale=await callOAI({webSearch:true,
       system:`Bạn là chuyên gia phân tích on-chain crypto. Hôm nay là ${today}. QUAN TRỌNG: Trả lời HOÀN TOÀN bằng Tiếng Việt. Chỉ văn bản thuần, không markdown.`,
@@ -657,7 +754,6 @@ async function fetchIntel(){
     $('whale-body').textContent=whale;$('whale-ts').textContent=ts();S.intel.whale=whale;
     log('ok','Whale data done');
 
-    // DRAMA + FUTURES LIST
     log('info','[3/3] Drama signals + futures list...');
     const raw=await callOAI({webSearch:true,
       system:`Bạn là công cụ tình báo thị trường crypto. Hôm nay là ${today}. Toàn bộ response của bạn PHẢI là một JSON object hợp lệ, không có text nào trước hoặc sau, không có markdown code fence.`,
@@ -667,12 +763,7 @@ drama_coins: 5-10 coin có tín hiệu cụ thể HÔM NAY. futures_list: 20-35 
     });
     let parsed;
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
-    catch{
-      // Fallback: extract JSON from response
-      const match=raw.match(/\{[\s\S]*\}/);
-      try{parsed=match?JSON.parse(match[0]):{drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
-      catch{parsed={drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
-    }
+    catch{const match=raw.match(/\{[\s\S]*\}/);try{parsed=match?JSON.parse(match[0]):{drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}catch{parsed={drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}}
     $('drama-body').textContent=parsed.drama_summary||raw;
     $('drama-ts').textContent=ts();
     S.intel.drama=parsed.drama_summary||'';
@@ -682,10 +773,7 @@ drama_coins: 5-10 coin có tín hiệu cụ thể HÔM NAY. futures_list: 20-35 
     $('fut-tags').innerHTML=S.intel.futuresList.map(s=>`<span class="chip">$${esc(s)}</span>`).join('');
     $('fut-ts').textContent=ts();
     log('ok',`Drama: ${S.intel.dramaCoins.length} signals. Futures: ${S.intel.futuresList.length} coins.`);
-    if(S.coins.length){
-      S.coins.forEach(c=>{const d=S.intel.dramaCoins.find(x=>x.symbol===c.symbol);if(d){c.drama=true;c.dramaLabel=d.signal;c.narrative=d.narrative||c.narrative;}});
-      renderMkt();
-    }
+    if(S.coins.length){S.coins.forEach(c=>{const d=S.intel.dramaCoins.find(x=>x.symbol===c.symbol);if(d){c.drama=true;c.dramaLabel=d.signal;c.narrative=d.narrative||c.narrative;}});renderMkt();}
   }catch(e){log('err','Lỗi Intel: '+e.message);}
   $('intel-ic').className='';$('intel-ic').textContent='⟳';$('btn-intel').disabled=false;
 }
@@ -813,20 +901,17 @@ function pickTopic(){
   return{type:'narrative',data:{name:'Bitcoin Ecosystem',description:'BTC đang dẫn dắt thị trường',coins:['BTC'],heat:5,catalyst:S.intel.drama||'Biến động giá'}};
 }
 
-// ═══════════════ 7. BUILD PROMPT — TIẾNG VIỆT CỨNG ═══════════════
+// ═══════════════ 7. BUILD PROMPT ═══════════════
 function buildPrompt(topic){
   const langSel=$('lang').value;
   const plen=$('plen').value;
   const tone=$('tone').value;
   const custom=$('custom').value.trim();
-
-  // ── NGÔN NGỮ — rule CỰC KỲ cứng ──
   const langRules={
     vi:`NGÔN NGỮ BẮT BUỘC: Viết TOÀN BỘ bài bằng TIẾNG VIỆT. Không được dùng bất kỳ từ tiếng Anh nào trừ tên coin/token ($BTC, $ETH...) và các thuật ngữ kỹ thuật không có từ Việt tương đương (DeFi, NFT, DYOR...). Tất cả nội dung, giải thích, hashtag mô tả PHẢI bằng Tiếng Việt.`,
     en:`LANGUAGE: Write the ENTIRE post in English only.`,
     bilingual:`LANGUAGE: Write in bilingual format — Vietnamese paragraph first, then English translation below, alternating.`,
   };
-
   const lenMap={short:'100–160 từ',medium:'260–330 từ',long:'460–560 từ'};
   const toneMap={
     drama:'Giọng văn drama, kích thích FOMO, tạo cảm giác cấp bách. Mở đầu bằng một câu hook cực mạnh. Năng lượng Crypto Twitter.',
@@ -836,76 +921,33 @@ function buildPrompt(topic){
     thread:'Định dạng thread: 1/ 2/ 3/ — mỗi tweet độc lập và súc tích.',
     degen:'Giọng degen CT. Casual, hiểu meme, nhưng thực sự có thông tin giá trị.',
   };
-
   const extras=[];
   if($('i-oc').checked) extras.push('Lồng ghép tín hiệu on-chain từ dữ liệu thực tế được cung cấp (whale moves, dòng tiền, TVL)');
   if($('i-sent').checked) extras.push('Đề cập context funding rate / sentiment từ dữ liệu thực tế');
   if($('i-ta').checked) extras.push('Thêm context TA ngắn gọn — level cần theo dõi, không đưa ra mục tiêu giá cụ thể');
   if($('i-mac').checked) extras.push('Kết nối ngắn gọn với bối cảnh macro (DXY, BTC dominance, risk-on/off)');
   if($('i-risk').checked) extras.push('Kết thúc bằng disclaimer tự nhiên (DYOR, không phải lời khuyên tài chính)');
-
-  // Live data context
   const liveCtx=[
     S.intel.drama?`TIN TỨC/DRAMA HIỆN TẠI: ${S.intel.drama}`:'',
     S.intel.funding?`FUNDING/OI: ${S.intel.funding.substring(0,250)}`:'',
     S.intel.whale?`HOẠT ĐỘNG WHALE: ${S.intel.whale.substring(0,250)}`:'',
     S.narratives.length?`NARRATIVE ĐANG HOT: ${S.narratives.slice(0,3).map(n=>n.name+' (catalyst: '+n.catalyst+')').join('; ')}`:'',
   ].filter(Boolean).join('\n');
-
   let topicCtx='';
   if(topic.type==='airdrop'){
     const a=topic.data||{};
-    topicCtx=`DỰ ÁN: ${a.name} ($${a.symbol||'?'})
-Giai đoạn: ${a.stage} | Đang hot: ${a.hot?'CÓ':'trung bình'}
-Mô tả: ${a.description}
-Cách tham gia: ${a.tasks}
-Narrative: ${a.narrative}${a.deadline?'\nDeadline: '+a.deadline:''}
-Hãy viết về: TẠI SAO quan trọng LÚC NÀY, cách qualify airdrop, risk vs reward thực tế. Cụ thể và thực tế.`;
+    topicCtx=`DỰ ÁN: ${a.name} ($${a.symbol||'?'})\nGiai đoạn: ${a.stage} | Đang hot: ${a.hot?'CÓ':'trung bình'}\nMô tả: ${a.description}\nCách tham gia: ${a.tasks}\nNarrative: ${a.narrative}${a.deadline?'\nDeadline: '+a.deadline:''}`;
   } else if(topic.type==='narrative'){
     const n=topic.data||{};
-    topicCtx=`NARRATIVE: ${n.name}
-Tình hình: ${n.description}
-Catalyst chính HÔM NAY: ${n.catalyst||'momentum đang tích lũy'}
-Các coin đang chơi: ${(n.coins||[]).map(c=>'$'+c).join(', ')}
-Rủi ro: ${n.risk||'rủi ro rotation'}
-Hãy viết về: tại sao đang di chuyển LÚC NÀY, coin nào positioned tốt nhất, timing entry.`;
+    topicCtx=`NARRATIVE: ${n.name}\nTình hình: ${n.description}\nCatalyst chính HÔM NAY: ${n.catalyst||'momentum đang tích lũy'}\nCác coin đang chơi: ${(n.coins||[]).map(c=>'$'+c).join(', ')}\nRủi ro: ${n.risk||'rủi ro rotation'}`;
   } else {
     const c=topic.data||{};
     const chg=(c.change||0).toFixed(2);
     const ai=S.intel.dramaCoins.find(d=>d.symbol===c.symbol);
-    topicCtx=`COIN: $${c.symbol} (${c.name})
-Giá hiện tại: $${fmtP(c.price)} | 24h: ${parseFloat(chg)>=0?'+':''}${chg}%
-Volume: $${fmtV(c.volume)} | Loại: ${c.type}
-Narrative: ${c.narrative||ai?.narrative||'Thị trường chung'}
-Tín hiệu live: ${ai?.signal||c.dramaLabel||'price action'}
-Hãy viết về: nguyên nhân thực sự đằng sau động thái này, điều cần theo dõi tiếp theo, shift cơ cấu hay noise.`;
+    topicCtx=`COIN: $${c.symbol} (${c.name})\nGiá hiện tại: $${fmtP(c.price)} | 24h: ${parseFloat(chg)>=0?'+':''}${chg}%\nVolume: $${fmtV(c.volume)} | Loại: ${c.type}\nNarrative: ${c.narrative||ai?.narrative||'Thị trường chung'}\nTín hiệu live: ${ai?.signal||c.dramaLabel||'price action'}`;
   }
-
-  const system=`Bạn là chuyên gia phân tích crypto và content creator cho mạng xã hội hàng đầu.
-
-${langRules[langSel]}
-
-Tone giọng văn: ${toneMap[tone]}
-Độ dài mục tiêu: ${lenMap[plen]}
-
-DỮ LIỆU THỊ TRƯỜNG LIVE (fetch ngay lúc này — dùng để bài viết kịp thời và cụ thể):
-${liveCtx||'Chưa có dữ liệu live — viết dựa trên thông tin topic được cung cấp.'}
-
-QUY TẮC BẮT BUỘC (không được vi phạm):
-1. ${langSel==='vi'?'TUYỆT ĐỐI KHÔNG viết bằng tiếng Anh — toàn bộ nội dung phải Tiếng Việt':'Use the specified language consistently'}
-2. TUYỆT ĐỐI KHÔNG đề cập tên sàn giao dịch (Binance, Coinbase, OKX, Bybit, Kraken, v.v.)
-3. TUYỆT ĐỐI KHÔNG dùng hashtag của sàn
-4. Nội dung trung lập về nền tảng — chỉ tập trung vào TÀI SẢN/NARRATIVE
-5. Hashtag: dùng định dạng $TICKER và các tag chủ đề (#Bitcoin #Crypto #DeFi #Web3 #Altcoin #Airdrop #DePIN #RWA v.v.) — TỐI ĐA 6 hashtag
-6. Văn phong tự nhiên như người thật, không phải AI
-7. Đa dạng câu mở đầu — KHÔNG bắt đầu bằng "Vậy," / "Hãy để tôi giải thích" / "Trong thế giới"
-8. MỘT insight chính mỗi bài — đừng cố nhồi tất cả
-9. Không đưa ra khuyến nghị giá mua/bán cụ thể${extras.length?'\n\nYêu cầu bổ sung:\n'+extras.map(e=>'- '+e).join('\n'):''}${custom?'\n\nHướng dẫn từ operator: '+custom:''}`;
-
-  return{
-    system,
-    user:`Viết bài đăng mạng xã hội crypto về:\n\n${topicCtx}\n\nTrả về CHỈ nội dung bài viết + hashtag. Không tiêu đề, không giải thích thêm.`
-  };
+  const system=`Bạn là chuyên gia phân tích crypto và content creator cho mạng xã hội hàng đầu.\n\n${langRules[langSel]}\n\nTone giọng văn: ${toneMap[tone]}\nĐộ dài mục tiêu: ${lenMap[plen]}\n\nDỮ LIỆU THỊ TRƯỜNG LIVE:\n${liveCtx||'Chưa có dữ liệu live — viết dựa trên thông tin topic được cung cấp.'}\n\nQUY TẮC BẮT BUỘC:\n1. ${langSel==='vi'?'TUYỆT ĐỐI KHÔNG viết bằng tiếng Anh':'Use the specified language consistently'}\n2. TUYỆT ĐỐI KHÔNG đề cập tên sàn giao dịch\n3. Nội dung trung lập về nền tảng\n4. Hashtag: $TICKER + tối đa 6 tag chủ đề\n5. Văn phong tự nhiên như người thật\n6. Không bắt đầu bằng "Vậy," / "Hãy để tôi giải thích"\n7. Không đưa ra khuyến nghị giá cụ thể${extras.length?'\n\nYêu cầu bổ sung:\n'+extras.map(e=>'- '+e).join('\n'):''}${custom?'\n\nHướng dẫn từ operator: '+custom:''}`;
+  return{system,user:`Viết bài đăng mạng xã hội crypto về:\n\n${topicCtx}\n\nTrả về CHỈ nội dung bài viết + hashtag. Không tiêu đề, không giải thích thêm.`};
 }
 
 // ═══════════════ 8. GENERATE ═══════════════
@@ -914,7 +956,7 @@ async function genPost(topic){
   return await callOAI({system,user,webSearch:false});
 }
 
-// ═══════════════ 9. POST TO PLATFORM ═══════════════
+// ═══════════════ 9. POST ═══════════════
 async function postTo(content){
   const p=$('platform').value;
   if(p==='preview') return{ok:true,id:'PREVIEW_'+Date.now(),sim:true};
@@ -1026,13 +1068,22 @@ function startCD(){
   },1000);
 }
 
-// ── Auto-detect device & set view ──
+// ── Auto-detect device on load ──
 (function detectDevice(){
   const w=window.innerWidth;
   if(w<=640) setView('mobile');
   else if(w<=1024) setView('tablet');
   else setView('desktop');
 })();
+
+// ── Re-detect on resize ──
+window.addEventListener('resize',()=>{
+  const w=window.innerWidth;
+  const cur=document.body.className;
+  if(w<=640&&!cur.includes('mobile')) setView('mobile');
+  else if(w>640&&w<=1024&&!cur.includes('tablet')) setView('tablet');
+  else if(w>1024&&!cur.includes('desktop')&&!cur.includes('fullscreen')) setView('desktop');
+});
 </script>
 </body>
 </html>
