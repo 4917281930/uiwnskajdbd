@@ -2,55 +2,139 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Crypto Auto Post Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0a0c0f;--bg2:#111418;--bg3:#181d23;--bg4:#1e252e;--border:#2a3340;--border2:#3a4755;--text:#e8edf2;--text2:#8a9ab0;--text3:#4a5a6e;--accent:#f0b90b;--accent2:#d4a00a;--green:#0ecb81;--red:#f6465d;--blue:#1e88e5;--purple:#7b61ff;--orange:#ff8c00;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+:root{
+  --bg:#0a0c0f;--bg2:#111418;--bg3:#181d23;--bg4:#1e252e;
+  --border:#2a3340;--border2:#3a4755;
+  --text:#e8edf2;--text2:#8a9ab0;--text3:#4a5a6e;
+  --accent:#f0b90b;--accent2:#d4a00a;
+  --green:#0ecb81;--red:#f6465d;--blue:#1e88e5;--purple:#7b61ff;--orange:#ff8c00;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --sidebar:300px;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.logo{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.03em;}
-.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 1rem;height:52px;display:flex;align-items:center;
+  justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;
+}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.03em;}
+.logo-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
-.status-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text2);background:var(--bg3);transition:all .3s;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.status-pill{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text2);background:var(--bg3);}
 .status-pill.running{border-color:var(--green);color:var(--green);background:rgba(14,203,129,.08);}
-.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 .status-pill.running .status-dot{animation:pulse 1.2s ease-in-out infinite;}
-.container{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 56px);}
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1.25rem;}
-.main{overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
-.card-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
-label{font-size:11px;color:var(--text2);font-weight:500;letter-spacing:.04em;display:block;margin-bottom:4px;margin-top:10px;}
+
+/* ── VIEW TOGGLE (desktop/tablet/mobile/fullscreen) ── */
+.view-btns{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px;}
+.vbtn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 7px;border-radius:4px;font-size:11px;transition:all .15s;line-height:1;}
+.vbtn:hover{color:var(--text2);}
+.vbtn.active{background:var(--bg4);color:var(--accent);}
+
+/* ── HAMBURGER (mobile) ── */
+.hamburger{display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text2);cursor:pointer;font-size:14px;}
+
+/* ── LAYOUT ── */
+.app{display:flex;position:fixed;top:52px;left:0;right:0;bottom:0;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--bg2);border-right:1px solid var(--border);
+  overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;
+  transition:transform .25s ease,width .25s ease;
+  z-index:100;
+}
+.sidebar.collapsed{transform:translateX(-100%);position:absolute;height:100%;}
+.sidebar-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar-overlay.show{display:block;}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;min-width:0;}
+
+/* ── VIEW MODES ── */
+body.view-desktop{--sidebar:300px;}
+body.view-tablet .sidebar{width:240px;min-width:240px;}
+body.view-tablet .main{padding:.75rem;}
+body.view-mobile .app{flex-direction:column;}
+body.view-mobile .sidebar{width:100%!important;min-width:unset;border-right:none;border-bottom:1px solid var(--border);max-height:45vh;position:relative;}
+body.view-mobile .main{padding:.5rem;}
+body.view-mobile .metrics{grid-template-columns:repeat(2,1fr)!important;}
+body.view-mobile .mkt-table{font-size:10px;}
+body.view-fullscreen .sidebar{display:none;}
+body.view-fullscreen .main{padding:1.25rem;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;}
+.card-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.sep{height:1px;background:var(--border);margin:8px 0;}
+
+/* ── FORMS ── */
+label{font-size:11px;color:var(--text2);font-weight:500;display:block;margin-bottom:3px;margin-top:8px;}
 label:first-child{margin-top:0;}
-input[type=text],input[type=password],input[type=number],select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none;transition:border-color .2s;}
+input[type=text],input[type=password],input[type=number],select,textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:7px 9px;outline:none;transition:border-color .2s;
+}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 select option{background:var(--bg3);}
-textarea{resize:vertical;min-height:60px;line-height:1.6;}
-.input-hint{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
-.tr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+textarea{resize:vertical;min-height:50px;line-height:1.5;}
+.hint{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+.tr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:2px;outline:none;margin:3px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.checkbox-row{display:flex;align-items:center;gap:6px;margin:4px 0;cursor:pointer;font-size:11px;color:var(--text2);}
+.checkbox-row input{width:auto!important;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:5px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .btn:hover{background:var(--bg4);border-color:var(--text3);}
 .btn.accent{background:var(--accent);border-color:var(--accent2);color:#000;font-weight:600;}
 .btn.accent:hover{background:var(--accent2);}
 .btn.red{background:rgba(246,70,93,.1);border-color:var(--red);color:var(--red);}
 .btn.green{background:rgba(14,203,129,.1);border-color:var(--green);color:var(--green);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;}
-.metric-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
-.metric-val{font-size:22px;font-weight:600;font-family:var(--mono);}
-.metric-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono);}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.btn-col{display:flex;flex-direction:column;gap:5px;margin-top:8px;}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.875rem;}
+.metric-label{font-size:9px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+.metric-val{font-size:20px;font-weight:600;font-family:var(--mono);}
+.metric-sub{font-size:9px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto;gap:0;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── MARKET TABLE ── */
 .mkt-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
-.mkt-table th{text-align:left;color:var(--text3);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);}
-.mkt-table td{padding:7px 8px;border-bottom:1px solid var(--bg3);}
+.mkt-table th{text-align:left;color:var(--text3);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 7px;border-bottom:1px solid var(--border);}
+.mkt-table td{padding:6px 7px;border-bottom:1px solid var(--bg3);}
 .mkt-table tr:last-child td{border:none;}
 .mkt-table tr:hover td{background:var(--bg3);}
 .cn{font-weight:600;color:var(--text);}
-.ct{font-size:10px;color:var(--text3);}
+.ct{font-size:9px;color:var(--text3);}
 .up{color:var(--green);}.down{color:var(--red);}
-.badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:.05em;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;font-weight:600;letter-spacing:.04em;}
 .badge.spot{background:rgba(30,136,229,.15);color:#64b5f6;border:1px solid rgba(30,136,229,.3);}
 .badge.futures{background:rgba(123,97,255,.15);color:#b39ddb;border:1px solid rgba(123,97,255,.3);}
 .badge.off{background:rgba(240,185,11,.1);color:var(--accent);border:1px solid rgba(240,185,11,.3);}
@@ -59,44 +143,79 @@ textarea{resize:vertical;min-height:60px;line-height:1.6;}
 .badge.narr{background:rgba(123,97,255,.12);color:#b39ddb;border:1px solid rgba(123,97,255,.3);}
 .badge.gem{background:rgba(255,140,0,.15);color:var(--orange);border:1px solid rgba(255,140,0,.4);}
 .badge.hot{background:rgba(246,70,93,.15);color:#ff8a95;border:1px solid rgba(246,70,93,.4);}
-.log-wrap{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;max-height:300px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.8;}
-.log-line{display:flex;gap:10px;}
-.log-ts{color:var(--text3);min-width:75px;}
+
+/* ── LOG ── */
+.log-wrap{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.6rem .875rem;max-height:280px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.8;}
+.log-line{display:flex;gap:8px;}
+.log-ts{color:var(--text3);min-width:68px;flex-shrink:0;}
 .log-ok{color:var(--green);}.log-err{color:var(--red);}.log-info{color:#64b5f6;}.log-warn{color:var(--accent);}
-.post-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;position:relative;overflow:hidden;margin-bottom:10px;}
+
+/* ── POST CARDS ── */
+.post-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;position:relative;overflow:hidden;margin-bottom:8px;}
 .post-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
-.post-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
-.post-body{font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;}
-.countdown{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);}
+.post-meta{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap;}
+.post-body{font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+
+/* ── DATA BLOCKS ── */
+.db{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;margin-bottom:8px;}
+.db-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+.db-body{font-size:12px;color:var(--text2);line-height:1.75;}
+.tag-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);}
+.chip.on{background:rgba(240,185,11,.08);border-color:rgba(240,185,11,.4);color:var(--accent);}
+
+/* ── RATIO BAR ── */
+.ratio-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;gap:2px;margin:5px 0;}
+.ratio-seg{height:100%;border-radius:2px;transition:width .35s;}
+
+/* ── COUNTDOWN ── */
+.countdown{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--accent);}
+
+/* ── SPINNER ── */
 .spin{display:inline-block;animation:rotate .8s linear infinite;}
 @keyframes rotate{to{transform:rotate(360deg)}}
-.sep{height:1px;background:var(--border);margin:8px 0;}
-::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
-.tab{padding:8px 13px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
-.tab:hover{color:var(--text2);}.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-panel{display:none;}.tab-panel.active{display:block;}
-.ratio-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:6px 0;}
-.ratio-seg{height:100%;border-radius:2px;transition:width .4s;}
-.db{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
-.db-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
-.db-body{font-size:12px;color:var(--text2);line-height:1.7;}
-.tag-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
-.chip{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);}
-.chip.on{background:rgba(240,185,11,.08);border-color:rgba(240,185,11,.4);color:var(--accent);}
-input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:2px;outline:none;margin:4px 0;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;}
-.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,15,.9);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+
+/* ── OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,15,.92);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .overlay.show{display:flex;}
-.ov-spin{font-size:36px;animation:rotate 1s linear infinite;color:var(--accent);}
-.ov-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.06em;}
-.ov-step{font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;max-width:400px;line-height:2;}
-.pbar{width:320px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
-.pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .6s ease;}
+.ov-spin{font-size:32px;animation:rotate 1s linear infinite;color:var(--accent);}
+.ov-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.06em;text-align:center;}
+.ov-step{font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;max-width:360px;line-height:1.8;}
+.pbar{width:280px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  body:not(.view-desktop) .sidebar{width:240px;min-width:240px;}
+}
+@media(max-width:640px){
+  .hamburger{display:block;}
+  .view-btns{display:none;}
+  .sidebar{position:absolute;height:100%;transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  body{font-size:13px;}
+  .main{padding:.625rem;}
+  .post-body{font-size:12px;}
+  .mkt-table{font-size:10px;}
+  .mkt-table .hide-mobile{display:none;}
+}
+@media(min-width:641px){
+  .sidebar-overlay{display:none!important;}
+}
 </style>
 </head>
-<body>
+<body class="view-desktop">
 
+<!-- OVERLAY -->
 <div class="overlay" id="ov">
   <div class="ov-spin">⟳</div>
   <div class="ov-title" id="ov-title">ĐANG QUÉT</div>
@@ -104,215 +223,250 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div class="ov-step" id="ov-step">Khởi động...</div>
 </div>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo"><div class="logo-dot"></div>CRYPTO AUTO POST PRO</div>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <span style="font-family:var(--mono);font-size:11px;color:var(--text3);" id="next-label">—</span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="logo"><div class="logo-dot"></div><span>CRYPTO AUTO POST PRO</span></div>
+  </div>
+  <div class="topbar-right">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3);display:none;" id="next-label" class="hide-xs">—</span>
+    <!-- VIEW SWITCHER -->
+    <div class="view-btns" title="Chọn giao diện">
+      <button class="vbtn active" onclick="setView('desktop')" title="Desktop">🖥</button>
+      <button class="vbtn" onclick="setView('tablet')" title="Tablet">📱</button>
+      <button class="vbtn" onclick="setView('mobile')" title="Mobile">📲</button>
+      <button class="vbtn" onclick="setView('fullscreen')" title="Fullscreen">⛶</button>
+    </div>
     <div class="status-pill" id="spill"><div class="status-dot"></div><span id="stext">STOPPED</span></div>
   </div>
 </div>
 
-<div class="container">
-<div class="sidebar">
+<!-- APP -->
+<div class="app" id="app">
 
-  <div class="card">
-    <div class="card-title">⚙ Config</div>
-    <label>OpenAI API Key <span style="color:var(--red)">*</span></label>
-    <input type="password" id="oai-key" placeholder="sk-..." autocomplete="off"/>
-    <div class="input-hint">Dùng cho generate bài + web search real-time data</div>
-    <div class="sep"></div>
-    <label>Platform</label>
-    <select id="platform" onchange="switchPlat()">
-      <option value="preview">Preview Only</option>
-      <option value="telegram">Telegram Channel</option>
-      <option value="binance">Binance Square</option>
-    </select>
-    <div id="tg-f" style="display:none">
-      <label>Bot Token</label><input type="password" id="tg-tok" placeholder="123456:ABC..."/>
-      <label>Channel ID</label><input type="text" id="tg-ch" placeholder="@channel"/>
-    </div>
-    <div id="bn-f" style="display:none">
-      <label>Binance API Key</label><input type="password" id="bn-key" placeholder="API key..."/>
-      <label>Binance Secret</label><input type="password" id="bn-sec" placeholder="Secret..."/>
-      <div class="input-hint">⚠ Cần backend HMAC để đăng thật</div>
-    </div>
-  </div>
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
 
-  <div class="card">
-    <div class="card-title">⏱ Schedule</div>
-    <label>Interval (phút)</label>
-    <input type="number" id="interval" value="30" min="5" max="1440"/>
-    <div class="sep"></div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;margin-bottom:8px;">TỈ LỆ NỘI DUNG</div>
-    <div class="tr"><span style="font-size:11px;color:var(--text2);">Spot drama</span><span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="p-spot">20%</span></div>
-    <input type="range" id="r-spot" min="0" max="60" value="20"/>
-    <div class="tr"><span style="font-size:11px;color:var(--text2);">Futures/Perp</span><span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="p-fut">15%</span></div>
-    <input type="range" id="r-fut" min="0" max="60" value="15"/>
-    <div class="tr"><span style="font-size:11px;color:var(--text2);">Narrative/Sector</span><span style="font-family:var(--mono);font-size:11px;color:#9c27b0" id="p-narr">25%</span></div>
-    <input type="range" id="r-narr" min="0" max="60" value="25"/>
-    <div class="tr"><span style="font-size:11px;color:var(--text2);">Airdrop/Pre-listing</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="p-air">20%</span></div>
-    <input type="range" id="r-air" min="0" max="50" value="20"/>
-    <div class="tr"><span style="font-size:11px;color:var(--text2);">Off-chain/Non-listed</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="p-off">20%</span></div>
-    <div class="ratio-bar">
-      <div class="ratio-seg" id="rs-s" style="background:var(--blue);width:20%"></div>
-      <div class="ratio-seg" id="rs-f" style="background:var(--purple);width:15%"></div>
-      <div class="ratio-seg" id="rs-n" style="background:#9c27b0;width:25%"></div>
-      <div class="ratio-seg" id="rs-a" style="background:var(--green);width:20%"></div>
-      <div class="ratio-seg" id="rs-o" style="background:var(--accent);width:20%"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">✍ Post Settings</div>
-    <label>Ngôn ngữ</label>
-    <select id="lang"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="bilingual">Song ngữ VI/EN</option></select>
-    <label>Độ dài</label>
-    <select id="plen"><option value="short">Ngắn ~150 từ</option><option value="medium" selected>Vừa ~300 từ</option><option value="long">Dài ~500 từ</option></select>
-    <label>Tone</label>
-    <select id="tone">
-      <option value="drama" selected>Drama / FOMO</option>
-      <option value="analytical">Phân tích chuyên sâu</option>
-      <option value="educational">Giáo dục / Tutorial</option>
-      <option value="alpha">Alpha / Insider</option>
-      <option value="thread">Thread 1/n style</option>
-      <option value="degen">Degen CT style</option>
-    </select>
-    <label style="margin-top:10px;">Bổ sung</label>
-    <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;">
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-oc" checked style="width:auto"> On-chain signals</label>
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-sent" checked style="width:auto"> Market sentiment</label>
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-ta" checked style="width:auto"> Technical hints</label>
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-mac" style="width:auto"> Macro context</label>
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:11px;"><input type="checkbox" id="i-risk" checked style="width:auto"> Risk disclaimer</label>
-    </div>
-    <label style="margin-top:10px;">Custom instructions</label>
-    <textarea id="custom" placeholder="VD: Luôn đề cập risk/reward..."></textarea>
-    <label>Blacklist coins</label>
-    <input type="text" id="blist" placeholder="LUNA, FTT, SQUID..."/>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🎮 Control</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <button class="btn accent" id="btn-start" onclick="startBot()">▶ Start</button>
-      <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Stop</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      <button class="btn" style="width:100%" onclick="runOnce()">↻ Chạy 1 lần</button>
-      <button class="btn" style="width:100%" onclick="previewOnly()">👁 Preview (không đăng)</button>
-      <button class="btn green" style="width:100%" onclick="fullScan()">🔍 Full scan thị trường</button>
-    </div>
-  </div>
-
-</div>
-
-<div class="main">
-  <div class="metrics">
-    <div class="metric"><div class="metric-label">Bài đã đăng</div><div class="metric-val" style="color:var(--accent)" id="m-post">0</div><div class="metric-sub">tổng cộng</div></div>
-    <div class="metric"><div class="metric-label">Coins scanned</div><div class="metric-val" style="color:var(--green)" id="m-coins">0</div><div class="metric-sub">real-time</div></div>
-    <div class="metric"><div class="metric-label">Last AI scan</div><div class="metric-val" id="m-scan" style="font-size:14px;color:var(--text2)">—</div><div class="metric-sub">web search</div></div>
-    <div class="metric"><div class="metric-label">Đăng tiếp theo</div><div class="countdown" id="m-cd">—</div><div class="metric-sub">mm:ss</div></div>
-  </div>
-
-  <div class="card" style="padding:1.25rem">
-    <div class="tabs">
-      <div class="tab active" onclick="st('market')">📈 Market</div>
-      <div class="tab" onclick="st('intel')">🧠 AI Intel</div>
-      <div class="tab" onclick="st('narratives')">🔥 Narratives</div>
-      <div class="tab" onclick="st('airdrops')">🪂 Airdrops</div>
-      <div class="tab" onclick="st('preview')">📝 Preview</div>
-      <div class="tab" onclick="st('log')">🖥 Log</div>
-      <div class="tab" onclick="st('history')">📚 History</div>
-    </div>
-
-    <!-- MARKET -->
-    <div class="tab-panel active" id="tab-market">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)" id="mkt-ts">Chưa quét</span>
-        <button class="btn" onclick="fetchMkt()" id="btn-mkt"><span id="mkt-ic">⟳</span> Quét giá real-time</button>
+    <div class="card">
+      <div class="card-title">⚙ Cấu hình API</div>
+      <label>OpenAI API Key <span style="color:var(--red)">*</span></label>
+      <input type="password" id="oai-key" placeholder="sk-..." autocomplete="off"/>
+      <div class="hint">Dùng cho generate bài + AI web search real-time</div>
+      <div class="sep"></div>
+      <label>Nền tảng đăng bài</label>
+      <select id="platform" onchange="switchPlat()">
+        <option value="preview">Preview Only</option>
+        <option value="telegram">Telegram Channel</option>
+        <option value="binance">Binance Square</option>
+      </select>
+      <div id="tg-f" style="display:none">
+        <label>Bot Token</label><input type="password" id="tg-tok" placeholder="123456:ABC..."/>
+        <label>Channel ID</label><input type="text" id="tg-ch" placeholder="@channel hoặc -100xxx"/>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="btn" onclick="flt('all')" style="font-size:11px;padding:4px 10px">Tất cả</button>
-        <button class="btn" onclick="flt('drama')" style="font-size:11px;padding:4px 10px">🔥 Drama</button>
-        <button class="btn" onclick="flt('futures')" style="font-size:11px;padding:4px 10px">Futures</button>
-        <button class="btn" onclick="flt('off')" style="font-size:11px;padding:4px 10px">Off-chain</button>
-        <button class="btn" onclick="flt('gem')" style="font-size:11px;padding:4px 10px">💎 Gem</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="mkt-table">
-          <thead><tr><th>Coin</th><th>Type</th><th>Giá</th><th>24h</th><th>Volume</th><th>Narrative</th><th>Signal</th></tr></thead>
-          <tbody id="mkt-body"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Nhấn "Quét giá" hoặc "Full scan"</td></tr></tbody>
-        </table>
+      <div id="bn-f" style="display:none">
+        <label>Binance API Key</label><input type="password" id="bn-key"/>
+        <label>Binance Secret</label><input type="password" id="bn-sec"/>
+        <div class="hint">⚠ Cần backend HMAC để đăng thật</div>
       </div>
     </div>
 
-    <!-- AI INTEL -->
-    <div class="tab-panel" id="tab-intel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">AI WEB SEARCH INTEL — 100% REAL-TIME</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI search web để lấy funding rates, whale moves, drama signals ngay lúc này</div>
+    <div class="card">
+      <div class="card-title">⏱ Lịch đăng bài</div>
+      <label>Chu kỳ (phút)</label>
+      <input type="number" id="interval" value="30" min="5" max="1440"/>
+      <div class="sep"></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:8px;">TỈ LỆ NỘI DUNG</div>
+      <div class="tr"><span style="font-size:11px;color:var(--text2);">Spot drama</span><span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="p-spot">20%</span></div>
+      <input type="range" id="r-spot" min="0" max="60" value="20"/>
+      <div class="tr"><span style="font-size:11px;color:var(--text2);">Futures/Perp</span><span style="font-family:var(--mono);font-size:11px;color:var(--purple)" id="p-fut">15%</span></div>
+      <input type="range" id="r-fut" min="0" max="60" value="15"/>
+      <div class="tr"><span style="font-size:11px;color:var(--text2);">Narrative/Sector</span><span style="font-family:var(--mono);font-size:11px;color:#9c27b0" id="p-narr">25%</span></div>
+      <input type="range" id="r-narr" min="0" max="60" value="25"/>
+      <div class="tr"><span style="font-size:11px;color:var(--text2);">Airdrop/Pre-listing</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="p-air">20%</span></div>
+      <input type="range" id="r-air" min="0" max="50" value="20"/>
+      <div class="tr"><span style="font-size:11px;color:var(--text2);">Off-chain/Non-listed</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="p-off">20%</span></div>
+      <div class="ratio-bar">
+        <div class="ratio-seg" id="rs-s" style="background:var(--blue);width:20%"></div>
+        <div class="ratio-seg" id="rs-f" style="background:var(--purple);width:15%"></div>
+        <div class="ratio-seg" id="rs-n" style="background:#9c27b0;width:25%"></div>
+        <div class="ratio-seg" id="rs-a" style="background:var(--green);width:20%"></div>
+        <div class="ratio-seg" id="rs-o" style="background:var(--accent);width:20%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✍ Cài đặt bài viết</div>
+      <label>Ngôn ngữ bài viết</label>
+      <select id="lang">
+        <option value="vi" selected>🇻🇳 Tiếng Việt (bắt buộc)</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="bilingual">🌐 Song ngữ VI/EN</option>
+      </select>
+      <div class="hint" id="lang-hint" style="color:var(--green)">✓ Bài viết sẽ 100% Tiếng Việt</div>
+      <label>Độ dài</label>
+      <select id="plen"><option value="short">Ngắn ~150 từ</option><option value="medium" selected>Vừa ~300 từ</option><option value="long">Dài ~500 từ</option></select>
+      <label>Tone giọng văn</label>
+      <select id="tone">
+        <option value="drama" selected>Drama / FOMO</option>
+        <option value="analytical">Phân tích chuyên sâu</option>
+        <option value="educational">Giáo dục / Tutorial</option>
+        <option value="alpha">Alpha / Insider tips</option>
+        <option value="thread">Thread 1/n</option>
+        <option value="degen">Degen CT style</option>
+      </select>
+      <label style="margin-top:10px;">Nội dung bổ sung</label>
+      <label class="checkbox-row"><input type="checkbox" id="i-oc" checked> On-chain signals</label>
+      <label class="checkbox-row"><input type="checkbox" id="i-sent" checked> Market sentiment</label>
+      <label class="checkbox-row"><input type="checkbox" id="i-ta" checked> Technical hints</label>
+      <label class="checkbox-row"><input type="checkbox" id="i-mac"> Macro context</label>
+      <label class="checkbox-row"><input type="checkbox" id="i-risk" checked> Disclaimer DYOR</label>
+      <label style="margin-top:10px;">Hướng dẫn thêm</label>
+      <textarea id="custom" placeholder="VD: Luôn đề cập risk/reward..."></textarea>
+      <label>Blacklist coins</label>
+      <input type="text" id="blist" placeholder="LUNA, FTT, SQUID..."/>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎮 Điều khiển</div>
+      <div class="btn-row">
+        <button class="btn accent" id="btn-start" onclick="startBot()">▶ Bắt đầu</button>
+        <button class="btn red" id="btn-stop" onclick="stopBot()" disabled>■ Dừng</button>
+      </div>
+      <div class="btn-col">
+        <button class="btn" onclick="runOnce()">↻ Chạy 1 lần</button>
+        <button class="btn" onclick="previewOnly()">👁 Preview (không đăng)</button>
+        <button class="btn green" onclick="fullScan()">🔍 Full scan thị trường</button>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Bài đã đăng</div><div class="metric-val" style="color:var(--accent)" id="m-post">0</div><div class="metric-sub">tổng cộng</div></div>
+      <div class="metric"><div class="metric-label">Coins scanned</div><div class="metric-val" style="color:var(--green)" id="m-coins">0</div><div class="metric-sub">real-time</div></div>
+      <div class="metric"><div class="metric-label">Lần scan cuối</div><div class="metric-val" id="m-scan" style="font-size:13px;color:var(--text2)">—</div><div class="metric-sub">AI web search</div></div>
+      <div class="metric"><div class="metric-label">Đăng tiếp theo</div><div class="countdown" id="m-cd">—</div><div class="metric-sub">mm:ss</div></div>
+    </div>
+
+    <div class="card" style="padding:1rem;">
+      <div class="tabs">
+        <div class="tab active" onclick="st('market')">📈 Market</div>
+        <div class="tab" onclick="st('intel')">🧠 AI Intel</div>
+        <div class="tab" onclick="st('narratives')">🔥 Narratives</div>
+        <div class="tab" onclick="st('airdrops')">🪂 Airdrops</div>
+        <div class="tab" onclick="st('preview')">📝 Preview</div>
+        <div class="tab" onclick="st('log')">🖥 Log</div>
+        <div class="tab" onclick="st('history')">📚 Lịch sử</div>
+      </div>
+
+      <!-- MARKET -->
+      <div class="tab-panel active" id="tab-market">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px;">
+          <span style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="mkt-ts">Chưa quét</span>
+          <button class="btn" onclick="fetchMkt()" id="btn-mkt"><span id="mkt-ic">⟳</span> Quét giá</button>
         </div>
-        <button class="btn" onclick="fetchIntel()" id="btn-intel"><span id="intel-ic">⟳</span> Scan ngay</button>
-      </div>
-      <div class="db"><div class="db-title">📊 Funding Rates &amp; Open Interest <span class="badge narr" style="font-size:8px" id="fund-ts">—</span></div><div class="db-body" id="fund-body">Chưa có — nhấn Scan ngay</div></div>
-      <div class="db"><div class="db-title">🐋 Whale Moves &amp; On-chain Activity <span class="badge narr" style="font-size:8px" id="whale-ts">—</span></div><div class="db-body" id="whale-body">Chưa có</div></div>
-      <div class="db"><div class="db-title">⚡ Drama Signals &amp; Breaking News <span class="badge hot" style="font-size:8px" id="drama-ts">—</span></div><div class="db-body" id="drama-body">Chưa có</div><div class="tag-row" id="drama-tags"></div></div>
-      <div class="db"><div class="db-title">📋 Futures Coins List (AI-updated) <span class="badge gem" style="font-size:8px" id="fut-ts">—</span></div><div class="tag-row" id="fut-tags"><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Chưa fetch</span></div></div>
-    </div>
-
-    <!-- NARRATIVES -->
-    <div class="tab-panel" id="tab-narratives">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">NARRATIVE RADAR — AI FETCHED REAL-TIME</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm narrative đang trending trên CT/Reddit/Discord hôm nay</div>
+        <div class="filter-row">
+          <button class="btn" onclick="flt('all')" style="font-size:10px;padding:3px 9px">Tất cả</button>
+          <button class="btn" onclick="flt('drama')" style="font-size:10px;padding:3px 9px">🔥 Drama</button>
+          <button class="btn" onclick="flt('futures')" style="font-size:10px;padding:3px 9px">Futures</button>
+          <button class="btn" onclick="flt('off')" style="font-size:10px;padding:3px 9px">Off-chain</button>
+          <button class="btn" onclick="flt('gem')" style="font-size:10px;padding:3px 9px">💎 Gem</button>
         </div>
-        <button class="btn" onclick="fetchNarr()" id="btn-narr"><span id="narr-ic">⟳</span> Fetch narratives</button>
-      </div>
-      <div id="narr-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm narrative đang hot</div></div>
-    </div>
-
-    <!-- AIRDROPS -->
-    <div class="tab-panel" id="tab-airdrops">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em">AIRDROP &amp; PRE-LISTING RADAR — AI FETCHED</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm các dự án pre-listing, airdrop active hôm nay</div>
+        <div style="overflow-x:auto">
+          <table class="mkt-table">
+            <thead><tr>
+              <th>Coin</th><th>Loại</th>
+              <th>Giá</th><th>24h</th>
+              <th class="hide-mobile">Volume</th>
+              <th class="hide-mobile">Narrative</th>
+              <th>Signal</th>
+            </tr></thead>
+            <tbody id="mkt-body"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem;font-family:var(--mono)">Nhấn "Quét giá" hoặc "Full scan" để tải dữ liệu</td></tr></tbody>
+          </table>
         </div>
-        <button class="btn" onclick="fetchAir()" id="btn-air"><span id="air-ic">⟳</span> Fetch airdrops</button>
       </div>
-      <div id="air-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm airdrop đang hot</div></div>
-    </div>
 
-    <!-- PREVIEW -->
-    <div class="tab-panel" id="tab-preview">
-      <div id="prev-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Preview hoặc chờ bot tạo bài</div>
-      <div id="prev-content" style="display:none"></div>
-    </div>
+      <!-- AI INTEL -->
+      <div class="tab-panel" id="tab-intel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AI WEB SEARCH INTEL — REAL-TIME</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI search web để lấy funding rates, whale moves, drama signals ngay lúc này</div>
+          </div>
+          <button class="btn" onclick="fetchIntel()" id="btn-intel"><span id="intel-ic">⟳</span> Scan ngay</button>
+        </div>
+        <div class="db"><div class="db-title">📊 Funding Rates &amp; Open Interest <span class="badge narr" style="font-size:8px" id="fund-ts">—</span></div><div class="db-body" id="fund-body">Chưa có dữ liệu — nhấn Scan ngay</div></div>
+        <div class="db"><div class="db-title">🐋 Whale Moves &amp; On-chain <span class="badge narr" style="font-size:8px" id="whale-ts">—</span></div><div class="db-body" id="whale-body">Chưa có dữ liệu</div></div>
+        <div class="db"><div class="db-title">⚡ Drama Signals &amp; Tin tức nóng <span class="badge hot" style="font-size:8px" id="drama-ts">—</span></div><div class="db-body" id="drama-body">Chưa có dữ liệu</div><div class="tag-row" id="drama-tags"></div></div>
+        <div class="db"><div class="db-title">📋 Danh sách Futures Coins (AI cập nhật) <span class="badge gem" style="font-size:8px" id="fut-ts">—</span></div><div class="tag-row" id="fut-tags"><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Chưa fetch</span></div></div>
+      </div>
 
-    <!-- LOG -->
-    <div class="tab-panel" id="tab-log">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn" onclick="document.getElementById('log-w').innerHTML=''" style="font-size:11px;padding:4px 10px">✕ Clear</button></div>
-      <div class="log-wrap" id="log-w"><div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Crypto Auto Post Pro v2 — 100% real-time qua AI web search. Nhập OpenAI key để bắt đầu.</span></div></div>
-    </div>
+      <!-- NARRATIVES -->
+      <div class="tab-panel" id="tab-narratives">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">NARRATIVE RADAR — AI FETCHED REAL-TIME</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm narrative đang trending trên CT/Reddit hôm nay</div>
+          </div>
+          <button class="btn" onclick="fetchNarr()" id="btn-narr"><span id="narr-ic">⟳</span> Fetch narratives</button>
+        </div>
+        <div id="narr-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm narrative đang hot</div></div>
+      </div>
 
-    <!-- HISTORY -->
-    <div class="tab-panel" id="tab-history">
-      <div id="hist-list"><div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Chưa có bài nào</div></div>
-    </div>
+      <!-- AIRDROPS -->
+      <div class="tab-panel" id="tab-airdrops">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em">AIRDROP &amp; PRE-LISTING RADAR — AI FETCHED</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">AI tìm dự án pre-listing, airdrop active hôm nay</div>
+          </div>
+          <button class="btn" onclick="fetchAir()" id="btn-air"><span id="air-ic">⟳</span> Fetch airdrops</button>
+        </div>
+        <div id="air-list"><div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Fetch để AI tìm airdrop đang hot</div></div>
+      </div>
 
-  </div>
-</div>
-</div>
+      <!-- PREVIEW -->
+      <div class="tab-panel" id="tab-preview">
+        <div id="prev-empty" style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Nhấn Preview hoặc chờ bot tạo bài viết</div>
+        <div id="prev-content" style="display:none"></div>
+      </div>
+
+      <!-- LOG -->
+      <div class="tab-panel" id="tab-log">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button class="btn" onclick="document.getElementById('log-w').innerHTML=''" style="font-size:10px;padding:3px 9px">✕ Xoá log</button>
+        </div>
+        <div class="log-wrap" id="log-w">
+          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-info">Crypto Auto Post Pro v2 — 100% real-time. Nhập OpenAI key → Full scan → Start Bot.</span></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="tab-panel" id="tab-history">
+        <div id="hist-list"><div style="text-align:center;padding:3rem;color:var(--text3);font-family:var(--mono);font-size:12px">Chưa có bài nào được đăng</div></div>
+      </div>
+
+    </div><!-- /card -->
+  </div><!-- /main -->
+</div><!-- /app -->
 
 <script>
-// ═══════ STATE ═══════
-const S={running:false,timer:null,cdt:null,nextRun:null,posted:0,coins:[],cf:'all',
+// ═══════════════ STATE ═══════════════
+const S={
+  running:false,timer:null,cdt:null,nextRun:null,
+  posted:0,coins:[],cf:'all',
   intel:{funding:'',whale:'',drama:'',dramaCoins:[],futuresList:[]},
-  narratives:[],airdrops:[]};
+  narratives:[],airdrops:[],
+};
 
-// ═══════ HELPERS ═══════
+// ═══════════════ HELPERS ═══════════════
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const ts=()=>new Date().toLocaleTimeString('vi-VN');
@@ -320,10 +474,10 @@ const fmtP=p=>{if(!p)return'0';if(p>1000)return p.toLocaleString('en-US',{maximu
 const fmtV=v=>{if(!v)return'0';if(v>1e9)return(v/1e9).toFixed(2)+'B';if(v>1e6)return(v/1e6).toFixed(1)+'M';if(v>1e3)return(v/1e3).toFixed(0)+'K';return String(v);};
 
 function log(type,msg){
-  const w=$('log-w'),t=ts();
+  const w=$('log-w');
   const cls={ok:'log-ok',err:'log-err',info:'log-info',warn:'log-warn'}[type]||'log-info';
   const d=document.createElement('div');d.className='log-line';
-  d.innerHTML=`<span class="log-ts">${t}</span><span class="${cls}">${esc(msg)}</span>`;
+  d.innerHTML=`<span class="log-ts">${ts()}</span><span class="${cls}">${esc(msg)}</span>`;
   w.appendChild(d);w.scrollTop=w.scrollHeight;
 }
 
@@ -333,12 +487,43 @@ function st(name){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
 }
 
+// ── View switcher ──
+function setView(v){
+  document.body.className='view-'+v;
+  document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));
+  const idx={desktop:0,tablet:1,mobile:2,fullscreen:3}[v];
+  document.querySelectorAll('.vbtn')[idx]?.classList.add('active');
+  // close sidebar on fullscreen
+  if(v==='fullscreen') $('sidebar').classList.add('collapsed');
+  else $('sidebar').classList.remove('collapsed');
+}
+
+// ── Mobile sidebar ──
+function toggleSidebar(){
+  const sb=$('sidebar'), ov=$('sb-overlay');
+  const isOpen=sb.classList.contains('open');
+  sb.classList.toggle('open',!isOpen);
+  ov.classList.toggle('show',!isOpen);
+}
+function closeSidebar(){
+  $('sidebar').classList.remove('open');
+  $('sb-overlay').classList.remove('show');
+}
+
+// ── Platform switch ──
 function switchPlat(){
   const p=$('platform').value;
   $('tg-f').style.display=p==='telegram'?'block':'none';
   $('bn-f').style.display=p==='binance'?'block':'none';
 }
 
+// ── Language hint ──
+$('lang').onchange=function(){
+  const hints={vi:'✓ Bài viết sẽ 100% Tiếng Việt',en:'✓ Posts will be in English',bilingual:'✓ Bài viết song ngữ Việt/Anh'};
+  $('lang-hint').textContent=hints[this.value]||'';
+};
+
+// ── Ratios ──
 function updateRatios(){
   const s=+$('r-spot').value,f=+$('r-fut').value,n=+$('r-narr').value,a=+$('r-air').value;
   const o=Math.max(0,100-s-f-n-a);
@@ -347,24 +532,32 @@ function updateRatios(){
 }
 ['r-spot','r-fut','r-narr','r-air'].forEach(id=>$(id).oninput=updateRatios);
 
+// ── Overlay ──
 function showOv(title,step,pct){$('ov').classList.add('show');$('ov-title').textContent=title;$('ov-step').textContent=step;$('ov-pfill').style.width=pct+'%';}
 function hideOv(){$('ov').classList.remove('show');}
 
-// ═══════ OPENAI CALL ═══════
-async function callOAI({system,user,webSearch=false,json=false}){
+// ═══════════════ OPENAI CALL ═══════════════
+// webSearch=true  → gpt-4o-search-preview (tự search web, không cần tools param)
+// webSearch=false → gpt-4o thường để generate bài viết
+async function callOAI({system,user,webSearch=false}){
   const key=$('oai-key').value.trim();
   if(!key) throw new Error('Chưa nhập OpenAI API key');
+
+  const model=webSearch?'gpt-4o-search-preview':'gpt-4o';
   const body={
-    model:'gpt-4o',max_tokens:1500,temperature:0.7,
+    model,
+    max_tokens:webSearch?1500:1200,
     messages:[{role:'system',content:system},{role:'user',content:user}],
   };
-  if(webSearch) body.tools=[{type:'web_search_preview'}],body.tool_choice='auto';
-  if(json) body.response_format={type:'json_object'};
+  // gpt-4o-search-preview không hỗ trợ temperature
+  if(!webSearch) body.temperature=0.88;
+
   const res=await fetch('https://api.openai.com/v1/chat/completions',{
-    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify(body)
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body),
   });
-  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'OpenAI error');}
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'OpenAI error '+res.status);}
   const data=await res.json();
   const msg=data.choices[0].message;
   if(typeof msg.content==='string') return msg.content.trim();
@@ -372,19 +565,21 @@ async function callOAI({system,user,webSearch=false,json=false}){
   return '';
 }
 
-// ═══════ 1. MARKET — CoinGecko real-time ═══════
+// ═══════════════ 1. MARKET — CoinGecko ═══════════════
 async function fetchMkt(){
   $('mkt-ic').className='spin';$('btn-mkt').disabled=true;
-  log('info','Fetching CoinGecko top 100 + trending...');
+  log('info','Đang fetch CoinGecko top 100 + trending...');
   try{
     const bl=($('blist').value||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
     const [r1,r2]=await Promise.all([
       fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h'),
-      fetch('https://api.coingecko.com/api/v3/search/trending')
+      fetch('https://api.coingecko.com/api/v3/search/trending'),
     ]);
     const d1=await r1.json(),d2=await r2.json();
     const trending=new Set((d2.coins||[]).map(c=>c.item.symbol.toUpperCase()));
-    const futSet=S.intel.futuresList.length?new Set(S.intel.futuresList):new Set(['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','TRX','NEAR','OP','ARB','APT','SUI','INJ','WLD','JUP','WIF','BONK','STRK','TIA']);
+    const futSet=S.intel.futuresList.length
+      ?new Set(S.intel.futuresList)
+      :new Set(['BTC','ETH','BNB','SOL','ADA','XRP','DOGE','AVAX','LINK','DOT','MATIC','UNI','ATOM','LTC','TRX','NEAR','OP','ARB','APT','SUI','INJ','WLD','JUP','WIF','BONK','STRK','TIA']);
     S.coins=[];
     d1.forEach(c=>{
       const sym=c.symbol.toUpperCase();
@@ -393,20 +588,21 @@ async function fetchMkt(){
       const isTrend=trending.has(sym);
       const ai=S.intel.dramaCoins.find(d=>d.symbol===sym);
       S.coins.push({
-        symbol:sym,name:c.name,price:c.current_price,change:c.price_change_percentage_24h,
-        volume:c.total_volume,mcap:c.market_cap,
+        symbol:sym,name:c.name,price:c.current_price,
+        change:c.price_change_percentage_24h,volume:c.total_volume,mcap:c.market_cap,
         type:futSet.has(sym)?(Math.random()>.5?'futures':'spot'):'spot',
         drama:chg>5||isTrend||!!ai,
-        dramaLabel:ai?.signal||(isTrend?'🔥 Trending':(chg>8?'🚀 Pump':(chg>5?'⚡ Move':'—'))),
-        narrative:ai?.narrative||'',isGem:c.market_cap<100e6&&c.market_cap>1e6,
+        dramaLabel:ai?.signal||(isTrend?'🔥 Trending':(chg>8?'🚀 Pump mạnh':(chg>5?'⚡ Biến động':'—'))),
+        narrative:ai?.narrative||'',
+        isGem:c.market_cap<100e6&&c.market_cap>1e6,
       });
     });
     $('m-coins').textContent=S.coins.length;
-    $('mkt-ts').textContent='Updated '+ts();
+    $('mkt-ts').textContent='Cập nhật lúc '+ts();
     $('m-scan').textContent=ts();
-    log('ok',`Loaded ${S.coins.length} coins. ${trending.size} trending on CoinGecko.`);
+    log('ok',`Loaded ${S.coins.length} coins. ${trending.size} trending.`);
     renderMkt();
-  }catch(e){log('err','Market error: '+e.message);}
+  }catch(e){log('err','Lỗi fetch market: '+e.message);}
   $('mkt-ic').className='';$('mkt-ic').textContent='⟳';$('btn-mkt').disabled=false;
 }
 
@@ -421,25 +617,33 @@ function renderMkt(){
   tbody.innerHTML=data.slice(0,60).map(c=>{
     const chg=(c.change||0).toFixed(2),cls=parseFloat(chg)>=0?'up':'down',sign=parseFloat(chg)>=0?'+':'';
     const tB=c.type==='off-chain'?'<span class="badge off">OFF</span>':c.type==='futures'?'<span class="badge futures">PERP</span>':'<span class="badge spot">SPOT</span>';
-    const gB=c.isGem?'<span class="badge gem" style="font-size:8px">GEM</span>':'';
-    const nB=c.narrative?`<span class="badge narr" style="font-size:8px">${esc(c.narrative.substring(0,14))}</span>`:'';
-    const dB=c.drama?'<span class="badge drama" style="font-size:8px">DRAMA</span>':'';
-    return `<tr><td><span class="cn">$${c.symbol}</span> <span class="ct">${esc(c.name.substring(0,12))}</span></td><td>${tB}${gB}</td><td style="font-family:var(--mono)">$${fmtP(c.price)}</td><td class="${cls}" style="font-family:var(--mono);font-weight:600">${sign}${chg}%</td><td style="font-family:var(--mono);color:var(--text2)">$${fmtV(c.volume)}</td><td>${nB}</td><td>${dB}<span style="font-size:10px;color:var(--text2)">${esc(c.dramaLabel||'')}</span></td></tr>`;
+    const gB=c.isGem?'<span class="badge gem" style="font-size:7px">GEM</span>':'';
+    const nB=c.narrative?`<span class="badge narr" style="font-size:7px">${esc(c.narrative.substring(0,12))}</span>`:'';
+    const dB=c.drama?'<span class="badge drama" style="font-size:7px">DRAMA</span>':'';
+    return `<tr>
+      <td><span class="cn">$${c.symbol}</span> <span class="ct">${esc(c.name.substring(0,10))}</span></td>
+      <td>${tB}${gB}</td>
+      <td style="font-family:var(--mono)">$${fmtP(c.price)}</td>
+      <td class="${cls}" style="font-family:var(--mono);font-weight:600">${sign}${chg}%</td>
+      <td class="hide-mobile" style="font-family:var(--mono);color:var(--text2)">$${fmtV(c.volume)}</td>
+      <td class="hide-mobile">${nB}</td>
+      <td>${dB} <span style="font-size:9px;color:var(--text2)">${esc(c.dramaLabel||'')}</span></td>
+    </tr>`;
   }).join('');
 }
 function flt(f){S.cf=f;renderMkt();}
 
-// ═══════ 2. AI INTEL — web search ═══════
+// ═══════════════ 2. AI INTEL — gpt-4o-search-preview ═══════════════
 async function fetchIntel(){
   $('intel-ic').className='spin';$('btn-intel').disabled=true;
-  log('info','AI searching: funding rates, whale moves, drama signals...');
+  log('info','AI đang search web: funding rates, whale moves, drama signals...');
   const today=new Date().toLocaleDateString('vi-VN');
   try{
     // FUNDING
     log('info','[1/3] Funding rates & OI...');
     const funding=await callOAI({webSearch:true,
-      system:`Crypto market analyst. Today ${today}. Answer in Vietnamese. Return plain text, no markdown headers.`,
-      user:`Search web for current crypto futures funding rates and open interest (${today}). Find: extreme funding rates (very positive/negative), total OI changes, liquidations in last 24h. Return 3-5 sentences with specific coins and numbers.`
+      system:`Bạn là chuyên gia phân tích thị trường crypto. Hôm nay là ${today}. QUAN TRỌNG: Trả lời HOÀN TOÀN bằng Tiếng Việt, không dùng tiếng Anh. Chỉ trả về văn bản thuần, không dùng markdown headers.`,
+      user:`Tìm kiếm dữ liệu funding rates và open interest của crypto futures hiện tại (${today}). Tìm: coin nào có funding rate cực cao hoặc cực thấp, OI thay đổi như thế nào trong 24h, có thanh lý lớn không. Trả về 3-5 câu bằng Tiếng Việt với số liệu cụ thể và tên coin.`,
     });
     $('fund-body').textContent=funding;$('fund-ts').textContent=ts();S.intel.funding=funding;
     log('ok','Funding rates done');
@@ -447,29 +651,28 @@ async function fetchIntel(){
     // WHALE
     log('info','[2/3] Whale & on-chain...');
     const whale=await callOAI({webSearch:true,
-      system:`Crypto on-chain analyst. Today ${today}. Answer in Vietnamese. Be specific with amounts and coins.`,
-      user:`Search Lookonchain, Whale Alert, Nansen for latest crypto whale moves today (${today}). Find: large wallet transfers, exchange inflows/outflows, whale accumulation/distribution. Return 3-5 sentences with specific coins, amounts, what it signals.`
+      system:`Bạn là chuyên gia phân tích on-chain crypto. Hôm nay là ${today}. QUAN TRỌNG: Trả lời HOÀN TOÀN bằng Tiếng Việt. Chỉ văn bản thuần, không markdown.`,
+      user:`Tìm kiếm thông tin whale moves và on-chain activity của crypto hôm nay (${today}) từ Lookonchain, Whale Alert, Nansen. Tìm: chuyển tiền lớn, dòng tiền vào/ra sàn, cá voi đang gom hay bán. Trả về 3-5 câu Tiếng Việt với số liệu cụ thể, tên coin và ý nghĩa tín hiệu.`,
     });
     $('whale-body').textContent=whale;$('whale-ts').textContent=ts();S.intel.whale=whale;
     log('ok','Whale data done');
 
     // DRAMA + FUTURES LIST
     log('info','[3/3] Drama signals + futures list...');
-    const raw=await callOAI({webSearch:true,json:true,
-      system:`Crypto market intelligence tool. Today ${today}. Return ONLY valid JSON, no markdown.`,
-      user:`Search web for current crypto market news and drama today (${today}).
-Return JSON:
-{
-  "drama_summary": "3-4 sentence summary in Vietnamese of biggest crypto news/drama right now",
-  "drama_coins": [{"symbol":"BTC","signal":"specific reason why in focus today","narrative":"narrative category"}],
-  "futures_list": ["BTC","ETH","SOL"],
-  "hot_narrative": "single hottest narrative sentence"
-}
-drama_coins: 5-10 coins with specific news/events TODAY. futures_list: current coins available as perpetuals on major DEXs (20-35 coins).`
+    const raw=await callOAI({webSearch:true,
+      system:`Bạn là công cụ tình báo thị trường crypto. Hôm nay là ${today}. Toàn bộ response của bạn PHẢI là một JSON object hợp lệ, không có text nào trước hoặc sau, không có markdown code fence.`,
+      user:`Tìm kiếm tin tức và drama crypto nóng nhất hôm nay (${today}). Trả về CHỈ JSON này (không markdown, không text):
+{"drama_summary":"3-4 câu Tiếng Việt tóm tắt tin tức/drama crypto nóng nhất lúc này","drama_coins":[{"symbol":"BTC","signal":"lý do cụ thể tại sao đang được chú ý hôm nay bằng Tiếng Việt","narrative":"danh mục narrative"}],"futures_list":["BTC","ETH","SOL","BNB","XRP","DOGE","AVAX","LINK","DOT","MATIC","UNI","ATOM","LTC","TRX","NEAR","OP","ARB","APT","SUI","INJ","WLD","JUP","WIF","BONK","STRK","TIA"],"hot_narrative":"narrative nóng nhất hiện tại bằng Tiếng Việt"}
+drama_coins: 5-10 coin có tín hiệu cụ thể HÔM NAY. futures_list: 20-35 coin đang có perpetual trên DEX lớn.`,
     });
     let parsed;
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
-    catch{parsed={drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
+    catch{
+      // Fallback: extract JSON from response
+      const match=raw.match(/\{[\s\S]*\}/);
+      try{parsed=match?JSON.parse(match[0]):{drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
+      catch{parsed={drama_summary:raw,drama_coins:[],futures_list:[],hot_narrative:''};}
+    }
     $('drama-body').textContent=parsed.drama_summary||raw;
     $('drama-ts').textContent=ts();
     S.intel.drama=parsed.drama_summary||'';
@@ -479,35 +682,33 @@ drama_coins: 5-10 coins with specific news/events TODAY. futures_list: current c
     $('fut-tags').innerHTML=S.intel.futuresList.map(s=>`<span class="chip">$${esc(s)}</span>`).join('');
     $('fut-ts').textContent=ts();
     log('ok',`Drama: ${S.intel.dramaCoins.length} signals. Futures: ${S.intel.futuresList.length} coins.`);
-    // Update market table with new signals
     if(S.coins.length){
       S.coins.forEach(c=>{const d=S.intel.dramaCoins.find(x=>x.symbol===c.symbol);if(d){c.drama=true;c.dramaLabel=d.signal;c.narrative=d.narrative||c.narrative;}});
       renderMkt();
     }
-  }catch(e){log('err','Intel error: '+e.message);}
+  }catch(e){log('err','Lỗi Intel: '+e.message);}
   $('intel-ic').className='';$('intel-ic').textContent='⟳';$('btn-intel').disabled=false;
 }
 
-// ═══════ 3. NARRATIVES — AI web search ═══════
+// ═══════════════ 3. NARRATIVES ═══════════════
 async function fetchNarr(){
   $('narr-ic').className='spin';$('btn-narr').disabled=true;
-  log('info','AI fetching trending narratives...');
+  log('info','AI đang tìm narrative trending...');
   const today=new Date().toLocaleDateString('vi-VN');
   try{
-    const raw=await callOAI({webSearch:true,json:true,
-      system:`Crypto narrative analyst. Today ${today}. Return ONLY valid JSON, no markdown.`,
-      user:`Search crypto Twitter, Reddit, news sites for hottest narratives RIGHT NOW (${today}).
-Return JSON:
-{"narratives":[{"name":"narrative name","description":"2-3 sentences why hot RIGHT NOW with specific catalyst","coins":["COIN1","COIN2","COIN3","COIN4"],"heat":4,"catalyst":"specific event/news driving this today","risk":"main risk"}]}
-Include 6-10 narratives. heat=1-5. Focus on what's actually trending TODAY.`
+    const raw=await callOAI({webSearch:true,
+      system:`Bạn là chuyên gia phân tích narrative crypto. Hôm nay là ${today}. Toàn bộ response PHẢI là JSON hợp lệ, không markdown, không text trước/sau.`,
+      user:`Tìm kiếm narrative crypto đang hot nhất trên Crypto Twitter, Reddit, các trang tin tức hôm nay (${today}). Trả về CHỈ JSON:
+{"narratives":[{"name":"tên narrative","description":"2-3 câu Tiếng Việt giải thích tại sao đang hot CỤ THỂ với catalyst","coins":["COIN1","COIN2","COIN3"],"heat":4,"catalyst":"sự kiện/tin tức cụ thể đang drive narrative này hôm nay bằng Tiếng Việt","risk":"rủi ro chính bằng Tiếng Việt"}]}
+6-10 narratives thực sự đang trending HÔM NAY. heat=1-5.`,
     });
     let parsed;
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
-    catch{parsed={narratives:[]};}
+    catch{const m=raw.match(/\{[\s\S]*\}/);try{parsed=m?JSON.parse(m[0]):{narratives:[]};}catch{parsed={narratives:[]};}}
     S.narratives=parsed.narratives||[];
     renderNarr();
     log('ok','Fetched '+S.narratives.length+' narratives');
-  }catch(e){log('err','Narrative error: '+e.message);}
+  }catch(e){log('err','Lỗi Narrative: '+e.message);}
   $('narr-ic').className='';$('narr-ic').textContent='⟳';$('btn-narr').disabled=false;
 }
 
@@ -516,36 +717,36 @@ function renderNarr(){
   if(!S.narratives.length){list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text3);font-family:var(--mono);font-size:12px">Không có dữ liệu</div>';return;}
   list.innerHTML=S.narratives.map(n=>`
     <div class="db">
-      <div class="db-title"><span>${esc(n.name)}</span>
-        <div>${[1,2,3,4,5].map(i=>`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${i<=n.heat?'var(--accent)':'var(--border2)'};margin-right:2px"></span>`).join('')}</div>
+      <div class="db-title">
+        <span>${esc(n.name)}</span>
+        <div>${[1,2,3,4,5].map(i=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${i<=(n.heat||0)?'var(--accent)':'var(--border2)'};margin-left:2px"></span>`).join('')}</div>
       </div>
       <div class="db-body">${esc(n.description)}</div>
-      ${n.catalyst?`<div style="margin-top:6px;font-size:11px;color:var(--green)">🔑 ${esc(n.catalyst)}</div>`:''}
-      ${n.risk?`<div style="margin-top:3px;font-size:11px;color:var(--red)">⚠ ${esc(n.risk)}</div>`:''}
+      ${n.catalyst?`<div style="margin-top:6px;font-size:11px;color:var(--green)">🔑 Catalyst: ${esc(n.catalyst)}</div>`:''}
+      ${n.risk?`<div style="margin-top:3px;font-size:11px;color:var(--red)">⚠ Rủi ro: ${esc(n.risk)}</div>`:''}
       <div class="tag-row">${(n.coins||[]).map(c=>`<span class="chip on">$${esc(c)}</span>`).join('')}</div>
     </div>`).join('');
 }
 
-// ═══════ 4. AIRDROPS — AI web search ═══════
+// ═══════════════ 4. AIRDROPS ═══════════════
 async function fetchAir(){
   $('air-ic').className='spin';$('btn-air').disabled=true;
-  log('info','AI fetching airdrops & pre-listings...');
+  log('info','AI đang tìm airdrop & pre-listing...');
   const today=new Date().toLocaleDateString('vi-VN');
   try{
-    const raw=await callOAI({webSearch:true,json:true,
-      system:`Crypto airdrop researcher. Today ${today}. Return ONLY valid JSON, no markdown.`,
-      user:`Search web for currently active crypto airdrops, testnets, pre-listing projects, gems with catalysts as of ${today}.
-Return JSON:
-{"projects":[{"name":"name","symbol":"TICKER","stage":"Testnet/Airdrop Active/Mainnet New/Pre-listing/Listed Gem","description":"2-3 sentences what it is and why interesting NOW","tasks":"what to do to qualify","narrative":"narrative category","hot":true,"deadline":"deadline if known else null","source":"where found"}]}
-Include 8-12 projects. Only currently active, not expired.`
+    const raw=await callOAI({webSearch:true,
+      system:`Bạn là chuyên gia nghiên cứu airdrop crypto. Hôm nay là ${today}. Toàn bộ response PHẢI là JSON hợp lệ, không markdown, không text trước/sau.`,
+      user:`Tìm kiếm các dự án airdrop, testnet, pre-listing đang active và gem tiềm năng tính đến ${today}. Trả về CHỈ JSON:
+{"projects":[{"name":"tên dự án","symbol":"TICKER","stage":"Testnet/Airdrop Active/Mainnet Mới/Pre-listing/Listed Gem","description":"2-3 câu Tiếng Việt về dự án và tại sao thú vị LÚC NÀY","tasks":"việc cần làm để nhận airdrop bằng Tiếng Việt","narrative":"danh mục narrative","hot":true,"deadline":"deadline nếu biết hoặc null","source":"nguồn thông tin"}]}
+8-12 dự án đang active thực sự, không expired.`,
     });
     let parsed;
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}
-    catch{parsed={projects:[]};}
+    catch{const m=raw.match(/\{[\s\S]*\}/);try{parsed=m?JSON.parse(m[0]):{projects:[]};}catch{parsed={projects:[]};}}
     S.airdrops=parsed.projects||[];
     renderAir();
-    log('ok','Fetched '+S.airdrops.length+' airdrop projects');
-  }catch(e){log('err','Airdrop error: '+e.message);}
+    log('ok','Fetched '+S.airdrops.length+' dự án airdrop');
+  }catch(e){log('err','Lỗi Airdrop: '+e.message);}
   $('air-ic').className='';$('air-ic').textContent='⟳';$('btn-air').disabled=false;
 }
 
@@ -555,138 +756,165 @@ function renderAir(){
   list.innerHTML=S.airdrops.map(a=>`
     <div class="db" style="border-left:3px solid ${a.hot?'var(--green)':'var(--border2)'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px">
-        <div><span style="font-family:var(--mono);font-weight:600">$${esc(a.symbol||'?')}</span> <span style="font-size:12px;color:var(--text2)">${esc(a.name)}</span></div>
-        <div style="display:flex;gap:4px">${a.hot?'<span class="badge hot" style="font-size:8px">HOT</span>':''}<span class="badge air">${esc(a.stage)}</span></div>
+        <div><span style="font-family:var(--mono);font-weight:600">$${esc(a.symbol||'?')}</span> <span style="font-size:12px;color:var(--text2)">${esc(a.name||'')}</span></div>
+        <div style="display:flex;gap:4px">${a.hot?'<span class="badge hot" style="font-size:7px">HOT</span>':''}<span class="badge air">${esc(a.stage||'')}</span></div>
       </div>
-      <div class="db-body">${esc(a.description)}</div>
-      ${a.tasks?`<div style="margin-top:6px;font-size:11px;color:var(--accent)">📋 ${esc(a.tasks)}</div>`:''}
+      <div class="db-body">${esc(a.description||'')}</div>
+      ${a.tasks?`<div style="margin-top:6px;font-size:11px;color:var(--accent)">📋 Tasks: ${esc(a.tasks)}</div>`:''}
       ${a.deadline?`<div style="margin-top:3px;font-size:11px;color:var(--red)">⏰ ${esc(a.deadline)}</div>`:''}
-      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
-        <span class="badge narr" style="font-size:8px">${esc(a.narrative||'')}</span>
+      <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+        <span class="badge narr" style="font-size:7px">${esc(a.narrative||'')}</span>
         ${a.source?`<span style="font-size:9px;font-family:var(--mono);color:var(--text3)">src: ${esc(a.source)}</span>`:''}
       </div>
     </div>`).join('');
 }
 
-// ═══════ 5. FULL SCAN ═══════
+// ═══════════════ 5. FULL SCAN ═══════════════
 async function fullScan(){
-  showOv('ĐANG QUÉT TOÀN BỘ','Bước 1/4: Fetch giá real-time từ CoinGecko...',10);
-  log('info','=== FULL SCAN START ===');
+  showOv('ĐANG QUÉT TOÀN BỘ THỊ TRƯỜNG','Bước 1/4: Fetch giá real-time từ CoinGecko...',8);
+  log('info','=== BẮT ĐẦU FULL SCAN ===');
   try{
     await fetchMkt();
-    showOv('ĐANG QUÉT TOÀN BỘ','Bước 2/4: AI search funding rates, whale moves, drama...',35);
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 2/4: AI search funding rates, whale moves, drama...',32);
     await fetchIntel();
-    showOv('ĐANG QUÉT TOÀN BỘ','Bước 3/4: AI search narratives đang trending...',65);
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 3/4: AI search narrative đang trending...',60);
     await fetchNarr();
-    showOv('ĐANG QUÉT TOÀN BỘ','Bước 4/4: AI search airdrop & pre-listing projects...',88);
+    showOv('ĐANG QUÉT TOÀN BỘ','Bước 4/4: AI search airdrop & pre-listing...',85);
     await fetchAir();
-    showOv('HOÀN THÀNH ✓','Tất cả dữ liệu đã được cập nhật real-time!',100);
-    log('ok','=== FULL SCAN DONE ===');
+    showOv('HOÀN THÀNH ✓','Tất cả dữ liệu đã cập nhật real-time!',100);
+    log('ok','=== FULL SCAN HOÀN THÀNH ===');
     setTimeout(hideOv,1800);
-  }catch(e){log('err','Full scan error: '+e.message);hideOv();}
+  }catch(e){log('err','Full scan lỗi: '+e.message);hideOv();}
 }
 
-// ═══════ 6. PICK TOPIC ═══════
+// ═══════════════ 6. PICK TOPIC ═══════════════
 function pickTopic(){
   const s=+$('r-spot').value,f=+$('r-fut').value,n=+$('r-narr').value,a=+$('r-air').value;
   const o=Math.max(0,100-s-f-n-a),r=Math.random()*100;
-  if(r<a&&S.airdrops.length){const hot=S.airdrops.filter(x=>x.hot);return{type:'airdrop',data:(hot.length?hot:S.airdrops)[Math.floor(Math.random()*Math.min((hot.length||S.airdrops.length),8))]};}
-  if(r<a+n&&S.narratives.length){const hot=S.narratives.filter(x=>x.heat>=4);return{type:'narrative',data:(hot.length?hot:S.narratives)[Math.floor(Math.random()*Math.min((hot.length||S.narratives.length),8))]};}
-  if(r<a+n+o&&S.coins.length){const pool=S.coins.filter(c=>c.type==='off-chain');return{type:'offchain',data:(pool.length?pool:S.coins.slice(0,10))[Math.floor(Math.random()*Math.min(pool.length||10,8))]};}
-  if(S.coins.length){
-    const pool=S.coins.filter(c=>c.type===(r<a+n+o+f?'futures':'spot'));
-    const drama=pool.filter(c=>c.drama);
-    return{type:r<a+n+o+f?'futures':'spot',data:(drama.length?drama:pool)[Math.floor(Math.random()*Math.min((drama.length||pool.length),12))]};
+  if(r<a&&S.airdrops.length){
+    const hot=S.airdrops.filter(x=>x.hot);
+    const arr=hot.length?hot:S.airdrops;
+    return{type:'airdrop',data:arr[Math.floor(Math.random()*Math.min(arr.length,8))]};
   }
-  return{type:'narrative',data:{name:'Bitcoin Ecosystem',description:'BTC market structure',coins:['BTC'],heat:5,catalyst:S.intel.drama||'Price action'}};
+  if(r<a+n&&S.narratives.length){
+    const hot=S.narratives.filter(x=>(x.heat||0)>=4);
+    const arr=hot.length?hot:S.narratives;
+    return{type:'narrative',data:arr[Math.floor(Math.random()*Math.min(arr.length,8))]};
+  }
+  if(S.coins.length){
+    const isOff=r<a+n+o;
+    const isFut=r<a+n+o+f;
+    let pool=isOff?S.coins.filter(c=>c.type==='off-chain'):isFut?S.coins.filter(c=>c.type==='futures'):S.coins.filter(c=>c.type==='spot');
+    if(!pool.length) pool=S.coins.slice(0,20);
+    const drama=pool.filter(c=>c.drama);
+    const arr=drama.length?drama:pool;
+    return{type:isOff?'offchain':isFut?'futures':'spot',data:arr[Math.floor(Math.random()*Math.min(arr.length,12))]};
+  }
+  return{type:'narrative',data:{name:'Bitcoin Ecosystem',description:'BTC đang dẫn dắt thị trường',coins:['BTC'],heat:5,catalyst:S.intel.drama||'Biến động giá'}};
 }
 
-// ═══════ 7. BUILD PROMPT ═══════
+// ═══════════════ 7. BUILD PROMPT — TIẾNG VIỆT CỨNG ═══════════════
 function buildPrompt(topic){
-  const lang=$('lang').value,plen=$('plen').value,tone=$('tone').value,custom=$('custom').value.trim();
-  const langMap={vi:'Vietnamese',en:'English',bilingual:'Vietnamese first, English below each paragraph'};
-  const lenMap={short:'100–160 words',medium:'260–330 words',long:'460–560 words'};
-  const toneMap={
-    drama:'Dramatic, FOMO-inducing, urgent. Open with a killer hook. Crypto Twitter energy.',
-    analytical:'Data-driven, analytical. Lead with a key number/anomaly. Professional trader voice.',
-    educational:'Clear, educational, explain WHY with analogies. Good for all levels.',
-    alpha:'Alpha-hunter. "Not many watching this." On-chain forward-looking signals.',
-    thread:'Thread format: 1/ 2/ 3/ — each tweet self-contained and punchy.',
-    degen:'Degen CT voice. Casual, meme-aware but genuinely informative.',
-  };
-  const extras=[];
-  if($('i-oc').checked) extras.push('Weave in on-chain signals from the live data provided (whale moves, exchange flows, TVL)');
-  if($('i-sent').checked) extras.push('Include funding rate/sentiment context from the live data');
-  if($('i-ta').checked) extras.push('Add brief TA context — key levels to watch, no specific price targets');
-  if($('i-mac').checked) extras.push('Connect briefly to macro (DXY, BTC dominance, risk-on/off)');
-  if($('i-risk').checked) extras.push('Close with natural risk disclaimer (DYOR, not financial advice)');
+  const langSel=$('lang').value;
+  const plen=$('plen').value;
+  const tone=$('tone').value;
+  const custom=$('custom').value.trim();
 
-  // Live context injected into every post
+  // ── NGÔN NGỮ — rule CỰC KỲ cứng ──
+  const langRules={
+    vi:`NGÔN NGỮ BẮT BUỘC: Viết TOÀN BỘ bài bằng TIẾNG VIỆT. Không được dùng bất kỳ từ tiếng Anh nào trừ tên coin/token ($BTC, $ETH...) và các thuật ngữ kỹ thuật không có từ Việt tương đương (DeFi, NFT, DYOR...). Tất cả nội dung, giải thích, hashtag mô tả PHẢI bằng Tiếng Việt.`,
+    en:`LANGUAGE: Write the ENTIRE post in English only.`,
+    bilingual:`LANGUAGE: Write in bilingual format — Vietnamese paragraph first, then English translation below, alternating.`,
+  };
+
+  const lenMap={short:'100–160 từ',medium:'260–330 từ',long:'460–560 từ'};
+  const toneMap={
+    drama:'Giọng văn drama, kích thích FOMO, tạo cảm giác cấp bách. Mở đầu bằng một câu hook cực mạnh. Năng lượng Crypto Twitter.',
+    analytical:'Phân tích sâu, dựa trên dữ liệu. Mở đầu bằng một con số hoặc dữ kiện bất ngờ. Giọng trader chuyên nghiệp.',
+    educational:'Giáo dục, dễ hiểu, giải thích TẠI SAO bằng ví dụ và phép ẩn dụ. Phù hợp mọi cấp độ.',
+    alpha:'Giọng alpha hunter. "Không nhiều người để ý điều này." Tập trung tín hiệu on-chain và forward-looking.',
+    thread:'Định dạng thread: 1/ 2/ 3/ — mỗi tweet độc lập và súc tích.',
+    degen:'Giọng degen CT. Casual, hiểu meme, nhưng thực sự có thông tin giá trị.',
+  };
+
+  const extras=[];
+  if($('i-oc').checked) extras.push('Lồng ghép tín hiệu on-chain từ dữ liệu thực tế được cung cấp (whale moves, dòng tiền, TVL)');
+  if($('i-sent').checked) extras.push('Đề cập context funding rate / sentiment từ dữ liệu thực tế');
+  if($('i-ta').checked) extras.push('Thêm context TA ngắn gọn — level cần theo dõi, không đưa ra mục tiêu giá cụ thể');
+  if($('i-mac').checked) extras.push('Kết nối ngắn gọn với bối cảnh macro (DXY, BTC dominance, risk-on/off)');
+  if($('i-risk').checked) extras.push('Kết thúc bằng disclaimer tự nhiên (DYOR, không phải lời khuyên tài chính)');
+
+  // Live data context
   const liveCtx=[
-    S.intel.drama?`CURRENT DRAMA/NEWS: ${S.intel.drama}`:'',
-    S.intel.funding?`FUNDING/OI: ${S.intel.funding.substring(0,280)}`:'',
-    S.intel.whale?`WHALE ACTIVITY: ${S.intel.whale.substring(0,280)}`:'',
-    S.narratives.length?`HOT NARRATIVES NOW: ${S.narratives.slice(0,3).map(n=>n.name+' (catalyst: '+n.catalyst+')').join('; ')}`:'',
+    S.intel.drama?`TIN TỨC/DRAMA HIỆN TẠI: ${S.intel.drama}`:'',
+    S.intel.funding?`FUNDING/OI: ${S.intel.funding.substring(0,250)}`:'',
+    S.intel.whale?`HOẠT ĐỘNG WHALE: ${S.intel.whale.substring(0,250)}`:'',
+    S.narratives.length?`NARRATIVE ĐANG HOT: ${S.narratives.slice(0,3).map(n=>n.name+' (catalyst: '+n.catalyst+')').join('; ')}`:'',
   ].filter(Boolean).join('\n');
 
   let topicCtx='';
   if(topic.type==='airdrop'){
     const a=topic.data||{};
-    topicCtx=`PROJECT: ${a.name} ($${a.symbol||'?'})
-Stage: ${a.stage} | Hot: ${a.hot?'YES':'moderate'}
-What it is: ${a.description}
-How to participate: ${a.tasks}
+    topicCtx=`DỰ ÁN: ${a.name} ($${a.symbol||'?'})
+Giai đoạn: ${a.stage} | Đang hot: ${a.hot?'CÓ':'trung bình'}
+Mô tả: ${a.description}
+Cách tham gia: ${a.tasks}
 Narrative: ${a.narrative}${a.deadline?'\nDeadline: '+a.deadline:''}
-Write: WHY it matters NOW, how to qualify, honest risk vs reward. Be specific.`;
+Hãy viết về: TẠI SAO quan trọng LÚC NÀY, cách qualify airdrop, risk vs reward thực tế. Cụ thể và thực tế.`;
   } else if(topic.type==='narrative'){
     const n=topic.data||{};
     topicCtx=`NARRATIVE: ${n.name}
-What's happening: ${n.description}
-Key catalyst TODAY: ${n.catalyst||'momentum building'}
-Coins in play: ${(n.coins||[]).map(c=>'$'+c).join(', ')}
-Risk: ${n.risk||'rotation risk'}
-Write: why moving NOW, best positioned coins, entry timing.`;
+Tình hình: ${n.description}
+Catalyst chính HÔM NAY: ${n.catalyst||'momentum đang tích lũy'}
+Các coin đang chơi: ${(n.coins||[]).map(c=>'$'+c).join(', ')}
+Rủi ro: ${n.risk||'rủi ro rotation'}
+Hãy viết về: tại sao đang di chuyển LÚC NÀY, coin nào positioned tốt nhất, timing entry.`;
   } else {
     const c=topic.data||{};
     const chg=(c.change||0).toFixed(2);
     const ai=S.intel.dramaCoins.find(d=>d.symbol===c.symbol);
     topicCtx=`COIN: $${c.symbol} (${c.name})
-Price: $${fmtP(c.price)} | 24h: ${parseFloat(chg)>=0?'+':''}${chg}%
-Volume: $${fmtV(c.volume)} | Type: ${c.type}
-Narrative: ${c.narrative||ai?.narrative||'General market'}
-Live signal: ${ai?.signal||c.dramaLabel||'price action'}
-Write: what's driving this, what to watch next, structural shift vs noise.`;
+Giá hiện tại: $${fmtP(c.price)} | 24h: ${parseFloat(chg)>=0?'+':''}${chg}%
+Volume: $${fmtV(c.volume)} | Loại: ${c.type}
+Narrative: ${c.narrative||ai?.narrative||'Thị trường chung'}
+Tín hiệu live: ${ai?.signal||c.dramaLabel||'price action'}
+Hãy viết về: nguyên nhân thực sự đằng sau động thái này, điều cần theo dõi tiếp theo, shift cơ cấu hay noise.`;
   }
 
-  const system=`You are a top-tier crypto analyst and social media content creator.
+  const system=`Bạn là chuyên gia phân tích crypto và content creator cho mạng xã hội hàng đầu.
 
-Tone: ${toneMap[tone]}
-Language: ${langMap[lang]}
-Length: ${lenMap[plen]}
+${langRules[langSel]}
 
-LIVE MARKET DATA (real-time, fetched just now — use to make post timely):
-${liveCtx||'No live data yet — write based on topic data provided.'}
+Tone giọng văn: ${toneMap[tone]}
+Độ dài mục tiêu: ${lenMap[plen]}
 
-CRITICAL RULES:
-- NEVER mention any exchange name (Binance, Coinbase, OKX, Bybit, Kraken, etc.)
-- NEVER use exchange-branded hashtags
-- Platform-neutral content — focus on ASSET/NARRATIVE only
-- Hashtags: $TICKER format + topical tags (#Bitcoin #Crypto #DeFi #Web3 #Altcoin #Airdrop #DePIN #RWA #BTCfi #AIcrypto etc.) — MAX 6 total
-- Sound human, not AI-generated
-- Vary opening hooks — NEVER start with "So," / "Let me explain" / "In the world of"
-- ONE main insight per post — don't try to cover everything
-- No specific buy/sell price recommendations${extras.length?'\n\nExtra requirements:\n'+extras.map(e=>'- '+e).join('\n'):''}${custom?'\n\nOperator instructions: '+custom:''}`;
+DỮ LIỆU THỊ TRƯỜNG LIVE (fetch ngay lúc này — dùng để bài viết kịp thời và cụ thể):
+${liveCtx||'Chưa có dữ liệu live — viết dựa trên thông tin topic được cung cấp.'}
 
-  return{system,user:`Write a crypto social post about:\n\n${topicCtx}\n\nReturn ONLY the post + hashtags. Nothing else.`};
+QUY TẮC BẮT BUỘC (không được vi phạm):
+1. ${langSel==='vi'?'TUYỆT ĐỐI KHÔNG viết bằng tiếng Anh — toàn bộ nội dung phải Tiếng Việt':'Use the specified language consistently'}
+2. TUYỆT ĐỐI KHÔNG đề cập tên sàn giao dịch (Binance, Coinbase, OKX, Bybit, Kraken, v.v.)
+3. TUYỆT ĐỐI KHÔNG dùng hashtag của sàn
+4. Nội dung trung lập về nền tảng — chỉ tập trung vào TÀI SẢN/NARRATIVE
+5. Hashtag: dùng định dạng $TICKER và các tag chủ đề (#Bitcoin #Crypto #DeFi #Web3 #Altcoin #Airdrop #DePIN #RWA v.v.) — TỐI ĐA 6 hashtag
+6. Văn phong tự nhiên như người thật, không phải AI
+7. Đa dạng câu mở đầu — KHÔNG bắt đầu bằng "Vậy," / "Hãy để tôi giải thích" / "Trong thế giới"
+8. MỘT insight chính mỗi bài — đừng cố nhồi tất cả
+9. Không đưa ra khuyến nghị giá mua/bán cụ thể${extras.length?'\n\nYêu cầu bổ sung:\n'+extras.map(e=>'- '+e).join('\n'):''}${custom?'\n\nHướng dẫn từ operator: '+custom:''}`;
+
+  return{
+    system,
+    user:`Viết bài đăng mạng xã hội crypto về:\n\n${topicCtx}\n\nTrả về CHỈ nội dung bài viết + hashtag. Không tiêu đề, không giải thích thêm.`
+  };
 }
 
-// ═══════ 8. GENERATE ═══════
+// ═══════════════ 8. GENERATE ═══════════════
 async function genPost(topic){
   const{system,user}=buildPrompt(topic);
   return await callOAI({system,user,webSearch:false});
 }
 
-// ═══════ 9. POST TO PLATFORM ═══════
+// ═══════════════ 9. POST TO PLATFORM ═══════════════
 async function postTo(content){
   const p=$('platform').value;
   if(p==='preview') return{ok:true,id:'PREVIEW_'+Date.now(),sim:true};
@@ -695,21 +923,20 @@ async function postTo(content){
     if(!tok||!ch) throw new Error('Thiếu Telegram bot token / channel ID');
     const r=await fetch(`https://api.telegram.org/bot${tok}/sendMessage`,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:ch,text:content})
+      body:JSON.stringify({chat_id:ch,text:content}),
     });
     const d=await r.json();
     if(!d.ok) throw new Error(d.description||'Telegram error');
     return{ok:true,id:'TG_'+d.result.message_id};
   }
-  log('warn','['+p+'] Backend HMAC signing needed. Simulated.');
+  log('warn','['+p+'] Cần backend HMAC. Chạy ở chế độ simulate.');
   return{ok:true,id:p.toUpperCase()+'_'+Date.now(),sim:true};
 }
 
-// ═══════ 10. MAIN CYCLE ═══════
+// ═══════════════ 10. MAIN CYCLE ═══════════════
 async function runCycle(doPost=true){
-  log('info','── New cycle ──');
+  log('info','── Chu kỳ mới bắt đầu ──');
   await fetchMkt();
-  // Refresh AI intel every 3 cycles to save API calls
   if(S.posted%3===0||!S.intel.drama){
     await fetchIntel();
     if(!S.narratives.length) await fetchNarr();
@@ -717,59 +944,74 @@ async function runCycle(doPost=true){
   }
   const topic=pickTopic();
   log('info','Topic: ['+topic.type+'] '+(topic.data?.name||topic.data?.symbol||'?'));
-  log('info','Generating post...');
+  log('info','Đang generate bài viết...');
   let content;
-  try{content=await genPost(topic);log('ok','Generated ('+content.length+' chars)');}
-  catch(e){log('err','Generate error: '+e.message);return;}
+  try{content=await genPost(topic);log('ok','Đã tạo bài ('+content.length+' ký tự)');}
+  catch(e){log('err','Lỗi generate: '+e.message);return;}
   showPreview(content,topic);
   if(doPost){
     try{
       const res=await postTo(content);
-      if(res.ok){S.posted++;$('m-post').textContent=S.posted;log('ok','✓ Posted #'+S.posted+' — '+res.id+(res.sim?' [SIM]':''));addHist(content,topic,res.id);}
-    }catch(e){log('err','Post error: '+e.message);}
+      if(res.ok){
+        S.posted++;$('m-post').textContent=S.posted;
+        log('ok','✓ Đã đăng #'+S.posted+' — '+res.id+(res.sim?' [SIM]':''));
+        addHist(content,topic,res.id);
+      }
+    }catch(e){log('err','Lỗi đăng bài: '+e.message);}
   }
 }
 
-// ═══════ UI ═══════
+// ═══════════════ UI ═══════════════
 function showPreview(content,topic){
   const cm={airdrop:'var(--green)',narrative:'var(--purple)',offchain:'var(--accent)',futures:'var(--purple)',spot:'var(--blue)'};
   const lm={airdrop:'AIRDROP',narrative:'NARRATIVE',offchain:'OFF-CHAIN',futures:'FUTURES',spot:'SPOT'};
-  const color=cm[topic.type]||'var(--accent)',label=lm[topic.type]||'POST',name=topic.data?.name||topic.data?.symbol||'?';
   $('prev-empty').style.display='none';$('prev-content').style.display='block';
-  $('prev-content').innerHTML=`<div class="post-card"><div class="post-meta"><span class="badge" style="background:rgba(0,0,0,.2);color:${color};border:1px solid ${color}40;font-size:9px">${label}</span><span class="badge spot" style="font-size:9px">${esc(name)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${new Date().toLocaleString('vi-VN')}</span></div><div class="post-body">${esc(content)}</div></div>`;
+  $('prev-content').innerHTML=`<div class="post-card">
+    <div class="post-meta">
+      <span class="badge" style="background:rgba(0,0,0,.2);color:${cm[topic.type]||'var(--accent)'};border:1px solid ${cm[topic.type]||'var(--accent)'}40;font-size:8px">${lm[topic.type]||'POST'}</span>
+      <span class="badge spot" style="font-size:8px">${esc(topic.data?.name||topic.data?.symbol||'?')}</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">${new Date().toLocaleString('vi-VN')}</span>
+    </div>
+    <div class="post-body">${esc(content)}</div>
+  </div>`;
   st('preview');
 }
+
 function addHist(content,topic,id){
   const el=$('hist-list');
   if(el.children[0]?.textContent?.includes('Chưa có')) el.innerHTML='';
   const div=document.createElement('div');div.className='post-card';
-  div.innerHTML=`<div class="post-meta"><span class="badge spot" style="font-size:9px">${esc(topic.data?.symbol||topic.data?.name||topic.type)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${new Date().toLocaleString('vi-VN')} — ${id}</span></div><div class="post-body" style="max-height:80px;overflow:hidden">${esc(content.substring(0,280))}${content.length>280?'...':''}</div>`;
+  div.innerHTML=`<div class="post-meta">
+    <span class="badge spot" style="font-size:8px">${esc(topic.data?.symbol||topic.data?.name||topic.type)}</span>
+    <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">${new Date().toLocaleString('vi-VN')} — ${esc(id)}</span>
+  </div><div class="post-body" style="max-height:80px;overflow:hidden">${esc(content.substring(0,280))}${content.length>280?'...':''}</div>`;
   el.prepend(div);
 }
 
-// ═══════ BOT CONTROL ═══════
+// ═══════════════ BOT CONTROL ═══════════════
 async function startBot(){
   S.running=true;$('btn-start').disabled=true;$('btn-stop').disabled=false;
   $('spill').className='status-pill running';$('stext').textContent='RUNNING';
-  log('ok','Bot started!');
+  log('ok','Bot đã bắt đầu chạy!');
   const ms=+$('interval').value*60000;
   await runCycle(true);
   S.timer=setInterval(async()=>{if(!S.running)return;S.nextRun=Date.now()+ms;await runCycle(true);},ms);
-  S.nextRun=Date.now()+ms;startCD();
+  S.nextRun=Date.now()+ms;
+  startCD();
 }
 function stopBot(){
   S.running=false;clearInterval(S.timer);clearInterval(S.cdt);S.nextRun=null;
   $('btn-start').disabled=false;$('btn-stop').disabled=true;
   $('spill').className='status-pill';$('stext').textContent='STOPPED';
   $('m-cd').textContent='—';$('next-label').textContent='—';
-  log('warn','Bot stopped.');
+  log('warn','Bot đã dừng.');
 }
-async function runOnce(){log('info','Manual run...');await runCycle(true);}
+async function runOnce(){log('info','Chạy thủ công 1 lần...');await runCycle(true);}
 async function previewOnly(){
-  log('info','Preview...');
+  log('info','Chế độ preview...');
   if(!S.coins.length) await fetchMkt();
   const topic=pickTopic();
-  try{const c=await genPost(topic);showPreview(c,topic);log('ok','Preview: '+topic.type);}
+  try{const c=await genPost(topic);showPreview(c,topic);log('ok','Preview xong: '+topic.type);}
   catch(e){log('err',e.message);}
 }
 function startCD(){
@@ -783,6 +1025,14 @@ function startCD(){
     $('next-label').textContent='Next: '+new Date(S.nextRun).toLocaleTimeString('vi-VN');
   },1000);
 }
+
+// ── Auto-detect device & set view ──
+(function detectDevice(){
+  const w=window.innerWidth;
+  if(w<=640) setView('mobile');
+  else if(w<=1024) setView('tablet');
+  else setView('desktop');
+})();
 </script>
 </body>
 </html>
